@@ -6,9 +6,11 @@ import { useAuthStore } from "./useAuthStore";
 export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
+  searchResults: [],
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
+  isSearching: false,
 
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -36,7 +38,10 @@ export const useChatStore = create((set, get) => ({
   sendMessage: async (messageData) => {
     const { selectedUser, messages } = get();
     try {
-      const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
+      const res = await axiosInstance.post(
+        `/messages/send/${selectedUser._id}`,
+        messageData
+      );
       set({ messages: [...messages, res.data] });
     } catch (error) {
       toast.error(error.response.data.message);
@@ -50,7 +55,8 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
 
     socket.on("newMessage", (newMessage) => {
-      const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+      const isMessageSentFromSelectedUser =
+        newMessage.senderId === selectedUser._id;
       if (!isMessageSentFromSelectedUser) return;
 
       set({
@@ -64,5 +70,24 @@ export const useChatStore = create((set, get) => ({
     socket.off("newMessage");
   },
 
+  searchUsers: async (query) => {
+    if (!query.trim()) {
+      set({ searchResults: [] });
+      return;
+    }
+
+    set({ isSearching: true });
+    try {
+      const res = await axiosInstance.get(`/messages/search?query=${query}`);
+      set({ searchResults: res.data });
+    } catch (error) {
+      toast.error(error.response.data.message || "Failed to search users");
+    } finally {
+      set({ isSearching: false });
+    }
+  },
+
   setSelectedUser: (selectedUser) => set({ selectedUser }),
+
+  clearSearchResults: () => set({ searchResults: [] }),
 }));
