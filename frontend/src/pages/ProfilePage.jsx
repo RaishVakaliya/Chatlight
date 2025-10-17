@@ -45,7 +45,7 @@ const ProfilePage = () => {
           {/* avatar upload section */}
 
           <div className="flex flex-col items-center gap-4">
-            <div className="relative">
+            <div className="relative select-none">
               <img
                 src={selectedImg || authUser.profilePic || "/avatar.png"}
                 alt="Profile"

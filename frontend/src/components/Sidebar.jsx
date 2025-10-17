@@ -53,7 +53,7 @@ const Sidebar = () => {
               ${selectedUser?._id === user._id ? "bg-base-300 ring-1 ring-base-300" : ""}
             `}
           >
-            <div className="relative mx-auto lg:mx-0">
+            <div className="relative mx-auto lg:mx-0 select-none">
               <img
                 src={user.profilePic || "/avatar.png"}
                 alt={user.name}
