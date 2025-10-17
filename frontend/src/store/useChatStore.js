@@ -89,5 +89,7 @@ export const useChatStore = create((set, get) => ({
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),
 
+  clearSelectedUser: () => set({ selectedUser: null, messages: [] }),
+
   clearSearchResults: () => set({ searchResults: [] }),
 }));

@@ -1,11 +1,26 @@
 import { useChatStore } from "../store/useChatStore";
+import { useEffect } from "react";
 
 import Sidebar from "../components/Sidebar";
 import NoChatSelected from "../components/NoChatSelected";
 import ChatContainer from "../components/ChatContainer";
 
 const HomePage = () => {
-  const { selectedUser } = useChatStore();
+  const { selectedUser, clearSelectedUser } = useChatStore();
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && selectedUser) {
+        clearSelectedUser();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedUser, clearSelectedUser]);
 
   return (
     <div className="h-screen bg-base-200">
