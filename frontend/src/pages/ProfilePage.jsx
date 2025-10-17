@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
-import { Camera, Mail, User } from "lucide-react";
+import { Camera, Mail, User, FileText, Save } from "lucide-react";
 
 const ProfilePage = () => {
   const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
   const [selectedImg, setSelectedImg] = useState(null);
+  const [description, setDescription] = useState(authUser?.description || "");
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -21,8 +23,18 @@ const ProfilePage = () => {
     };
   };
 
+  const handleDescriptionSave = async () => {
+    await updateProfile({ description });
+    setIsEditingDescription(false);
+  };
+
+  const handleDescriptionCancel = () => {
+    setDescription(authUser?.description || "");
+    setIsEditingDescription(false);
+  };
+
   return (
-    <div className="h-screen pt-20">
+    <div className="min-h-screen pt-20">
       <div className="max-w-2xl mx-auto p-4 py-8">
         <div className="bg-base-300 rounded-xl p-6 space-y-8">
           <div className="text-center">
@@ -80,6 +92,54 @@ const ProfilePage = () => {
                 Email Address
               </div>
               <p className="px-4 py-2.5 bg-base-200 rounded-lg border">{authUser?.email}</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="text-sm text-zinc-400 flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Description
+              </div>
+              {isEditingDescription ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Tell us about yourself..."
+                    className="w-full px-4 py-2.5 bg-base-200 rounded-lg border resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                    rows={3}
+                    disabled={isUpdatingProfile}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleDescriptionSave}
+                      disabled={isUpdatingProfile}
+                      className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-content rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    >
+                      <Save className="w-4 h-4" />
+                      {isUpdatingProfile ? "Saving..." : "Save"}
+                    </button>
+                    <button
+                      onClick={handleDescriptionCancel}
+                      disabled={isUpdatingProfile}
+                      className="px-4 py-2 bg-base-200 text-base-content rounded-lg hover:bg-base-300 transition-colors disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <p className="px-4 py-2.5 bg-base-200 rounded-lg border flex-1 min-h-[3rem] flex items-center">
+                    {authUser?.description || "No description added yet"}
+                  </p>
+                  <button
+                    onClick={() => setIsEditingDescription(true)}
+                    className="ml-2 px-3 py-2 bg-primary text-primary-content rounded-lg hover:bg-primary/90 transition-colors"
+                  >
+                    Edit
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
