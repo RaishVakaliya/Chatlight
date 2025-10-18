@@ -111,7 +111,7 @@ const ChatContainer = () => {
                 {formatMessageTime(message.createdAt)}
               </time>
             </div>
-            <div className="chat-bubble flex flex-col break-words whitespace-pre-wrap">
+            <div className="relative chat-bubble flex flex-col break-words whitespace-pre-wrap">
               {message.image && (
                 <img
                   src={message.image}
@@ -121,6 +121,17 @@ const ChatContainer = () => {
                 />
               )}
               {message.text && <p>{message.text}</p>}
+
+              {/* Read status indicator for sent messages */}
+              {message.senderId === authUser._id && (
+                <div className="flex justify-end mt-1">
+                  <div
+                    className={`absolute top-1/2 -translate-y-1/2 right-[+4px] w-2 h-2 rounded-full ${
+                      message.read ? "bg-green-500" : "bg-gray-400"
+                    }`}
+                  />
+                </div>
+              )}
             </div>
           </div>
         ))}

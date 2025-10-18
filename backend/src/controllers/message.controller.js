@@ -60,7 +60,53 @@ export const getMessages = async (req, res) => {
       ],
     });
 
-    res.status(200).json(messages);
+    // Mark messages sent to current user as read
+    const unreadMessages = await Message.find({
+      senderId: userToChatId,
+      receiverId: myId,
+      read: false,
+    });
+
+    if (unreadMessages.length > 0) {
+      await Message.updateMany(
+        {
+          senderId: userToChatId,
+          receiverId: myId,
+          read: false,
+        },
+        {
+          $set: { read: true },
+        }
+      );
+
+      // Notify the sender that their messages have been read
+      const senderSocketId = getReceiverSocketId(userToChatId);
+      if (senderSocketId) {
+        io.to(senderSocketId).emit("messagesRead", {
+          receiverId: myId,
+          messageIds: unreadMessages.map(msg => msg._id),
+        });
+      }
+    }
+
+    // Update messages with read status
+    const updatedMessages = messages.map((message) => {
+      if (message.senderId.toString() === myId.toString()) {
+        // For sent messages, check if they're read
+        return {
+          ...message.toObject(),
+          read: message.read,
+        };
+      } else {
+        // For received messages, they're now read
+        return {
+          ...message.toObject(),
+          read: true,
+        };
+      }
+    });
+
+    res.status(200).json(updatedMessages);
   } catch (error) {
     console.log("Error in getMessages controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });

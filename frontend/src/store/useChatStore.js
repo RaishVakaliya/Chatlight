@@ -140,11 +140,28 @@ export const useChatStore = create((set, get) => ({
         });
       }
     });
+
+    // Listen for messages read events
+    socket.on("messagesRead", (data) => {
+      const { messageIds } = data;
+      const { messages } = get();
+      
+      // Update read status for the specified messages
+      const updatedMessages = messages.map((message) => {
+        if (messageIds.includes(message._id)) {
+          return { ...message, read: true };
+        }
+        return message;
+      });
+      
+      set({ messages: updatedMessages });
+    });
   },
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     socket.off("newMessage");
+    socket.off("messagesRead");
   },
 
   searchUsers: async (query) => {
