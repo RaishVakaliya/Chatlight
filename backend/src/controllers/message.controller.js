@@ -11,7 +11,7 @@ export const getUsersForSidebar = async (req, res) => {
       _id: { $ne: loggedInUserId },
     }).select("-password");
 
-    // Get unread message counts for each user
+    // Get unread message counts and last message time for each user
     const usersWithUnreadCounts = await Promise.all(
       filteredUsers.map(async (user) => {
         const unreadCount = await Message.countDocuments({
@@ -20,14 +20,28 @@ export const getUsersForSidebar = async (req, res) => {
           read: false,
         });
 
+        // Get the last message time between current user and this user
+        const lastMessage = await Message.findOne({
+          $or: [
+            { senderId: user._id, receiverId: loggedInUserId },
+            { senderId: loggedInUserId, receiverId: user._id },
+          ],
+        }).sort({ createdAt: -1 });
+
         return {
           ...user._doc,
           unreadCount,
+          lastMessageTime: lastMessage ? lastMessage.createdAt : user.createdAt,
         };
       })
     );
 
-    res.status(200).json(usersWithUnreadCounts);
+    // Sort users by last message time (most recent first)
+    const sortedUsers = usersWithUnreadCounts.sort((a, b) => {
+      return new Date(b.lastMessageTime) - new Date(a.lastMessageTime);
+    });
+
+    res.status(200).json(sortedUsers);
   } catch (error) {
     console.error("Error in getUsersForSidebar: ", error.message);
     res.status(500).json({ error: "Internal server error" });

@@ -40,7 +40,7 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
               }`}
             />
           </div>
-          
+
           <div>
             <h3 className="text-2xl font-semibold">{user.fullName}</h3>
           </div>
@@ -49,24 +49,38 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
         {/* Description */}
         {user.description && (
           <div className="space-y-3">
-            <h4 className="text-base font-medium text-base-content/70">About</h4>
+            <h4 className="text-base font-medium text-base-content/70">
+              About
+            </h4>
             <p className="text-base bg-base-200 p-4 rounded-lg">
               {user.description}
             </p>
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="space-y-4">
-          <button className="w-full flex items-center gap-4 p-4 bg-base-200 hover:bg-base-300 rounded-lg transition-colors">
-            <Phone className="w-6 h-6 text-primary" />
-            <span className="text-base">Voice Call</span>
-          </button>
+        {/* Account Information */}
+        <div className="space-y-4 pt-6 border-t border-base-300">
+          <h4 className="text-base font-medium text-base-content/70">
+            Account Information
+          </h4>
           
-          <button className="w-full flex items-center gap-4 p-4 bg-base-200 hover:bg-base-300 rounded-lg transition-colors">
-            <Video className="w-6 h-6 text-primary" />
-            <span className="text-base">Video Call</span>
-          </button>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center py-2">
+              <span className="text-sm text-base-content/70">Member Since</span>
+              <span className="text-sm font-medium">
+                {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                }) : 'Unknown'}
+              </span>
+            </div>
+            
+            <div className="flex justify-between items-center py-2">
+              <span className="text-sm text-base-content/70">Account Status</span>
+              <span className="text-sm font-medium text-green-500">Active</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

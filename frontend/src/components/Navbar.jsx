@@ -14,6 +14,7 @@ import {
 import logo from "../assets/app_logo.png";
 import { useChatStore } from "../store/useChatStore";
 import { useState } from "react";
+import LogoutConfirmationModal from "./LogoutConfirmationModal";
 
 const Navbar = () => {
   const { logout, authUser } = useAuthStore();
@@ -34,6 +35,7 @@ const Navbar = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -42,6 +44,19 @@ const Navbar = () => {
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    logout();
+    setShowLogoutModal(false);
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
   };
 
   const handleSelectUser = (user) => {
@@ -138,7 +153,7 @@ const Navbar = () => {
                   <span className="hidden sm:inline">Profile</span>
                 </Link>
 
-                <button className="btn btn-sm gap-2" onClick={logout}>
+                <button className="btn btn-sm gap-2" onClick={handleLogoutClick}>
                   <LogOut className="size-5" />
                   <span className="hidden sm:inline">Logout</span>
                 </button>
@@ -201,7 +216,7 @@ const Navbar = () => {
                 </Link>
                 <button
                   className="flex items-center gap-2 p-2"
-                  onClick={logout}
+                  onClick={handleLogoutClick}
                 >
                   <LogOut className="size-5" />
                   <span>Logout</span>
@@ -265,6 +280,13 @@ const Navbar = () => {
           </div>
         </div>
       )}
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={handleLogoutCancel}
+        onConfirm={handleLogoutConfirm}
+      />
     </header>
   );
 };

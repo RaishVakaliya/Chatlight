@@ -59,13 +59,33 @@ export const useChatStore = create((set, get) => ({
   },
 
   sendMessage: async (messageData) => {
-    const { selectedUser, messages } = get();
+    const { selectedUser, messages, users } = get();
     try {
       const res = await axiosInstance.post(
         `/messages/send/${selectedUser._id}`,
         messageData
       );
+      
+      // Update messages
       set({ messages: [...messages, res.data] });
+
+      // Update the selected user's last message time and re-sort users
+      const updatedUsers = users.map((user) => {
+        if (user._id === selectedUser._id) {
+          return {
+            ...user,
+            lastMessageTime: res.data.createdAt,
+          };
+        }
+        return user;
+      });
+
+      // Sort users by last message time (most recent first)
+      const sortedUsers = updatedUsers.sort((a, b) => {
+        return new Date(b.lastMessageTime) - new Date(a.lastMessageTime);
+      });
+
+      set({ users: sortedUsers });
     } catch (error) {
       toast.error(error.response.data.message);
     }
@@ -87,12 +107,37 @@ export const useChatStore = create((set, get) => ({
       });
     });
 
-    // Listen for new messages from other users to update unread counts
+    // Listen for new messages from other users to update unread counts and sort
     socket.on("newMessage", (newMessage) => {
       const isMessageSentToCurrentUser = newMessage.receiverId === useAuthStore.getState().authUser._id;
       if (isMessageSentToCurrentUser) {
-        // Refresh users list to update unread counts
-        get().getUsers();
+        // Update the specific user's last message time and re-sort
+        const { users } = get();
+        const updatedUsers = users.map((user) => {
+          if (user._id === newMessage.senderId) {
+            return {
+              ...user,
+              unreadCount: (user.unreadCount || 0) + 1,
+              lastMessageTime: newMessage.createdAt,
+            };
+          }
+          return user;
+        });
+
+        // Sort users by last message time (most recent first)
+        const sortedUsers = updatedUsers.sort((a, b) => {
+          return new Date(b.lastMessageTime) - new Date(a.lastMessageTime);
+        });
+
+        // Update unread chat count
+        const unreadChatCount = sortedUsers.filter(
+          (user) => (user.unreadCount || 0) > 0
+        ).length;
+
+        set({ 
+          users: sortedUsers,
+          unreadChatCount: unreadChatCount
+        });
       }
     });
   },
