@@ -5,6 +5,7 @@ import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
 import UserProfileModal from "./UserProfileModal";
+import ImagePreviewModal from "./ImagePreviewModal";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
 
@@ -19,12 +20,19 @@ const ChatContainer = () => {
   } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
+  const messageInputRef = useRef(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     getMessages(selectedUser._id);
 
     subscribeToMessages();
+
+    // Focus the message input when opening a chat
+    setTimeout(() => {
+      messageInputRef.current?.focus();
+    }, 100);
 
     return () => unsubscribeFromMessages();
   }, [
@@ -56,7 +64,7 @@ const ChatContainer = () => {
       <div className="flex-1 flex flex-col overflow-auto">
         <ChatHeader onProfileClick={() => setIsProfileModalOpen(true)} />
         <MessageSkeleton />
-        <MessageInput />
+        <MessageInput ref={messageInputRef} />
       </div>
     );
   }
@@ -96,7 +104,8 @@ const ChatContainer = () => {
                 <img
                   src={message.image}
                   alt="Attachment"
-                  className="sm:max-w-[200px] rounded-md mb-2"
+                  className="sm:max-w-[200px] rounded-md mb-2 cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => setSelectedImage(message.image)}
                 />
               )}
               {message.text && <p>{message.text}</p>}
@@ -105,7 +114,15 @@ const ChatContainer = () => {
         ))}
       </div>
 
-      <MessageInput />
+      <MessageInput ref={messageInputRef} />
+
+      {/* Image Preview Modal */}
+      <ImagePreviewModal
+        isOpen={!!selectedImage}
+        onClose={() => setSelectedImage(null)}
+        imageUrl={selectedImage}
+        imageAlt="Chat Image"
+      />
     </div>
   );
 };

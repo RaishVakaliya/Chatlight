@@ -1,13 +1,20 @@
-import { useRef, useState } from "react";
+import { useRef, useState, forwardRef, useImperativeHandle } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
 
-const MessageInput = () => {
+const MessageInput = forwardRef((props, ref) => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
+  const textInputRef = useRef(null);
   const { sendMessage } = useChatStore();
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      textInputRef.current?.focus();
+    }
+  }));
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -72,6 +79,7 @@ const MessageInput = () => {
       <form onSubmit={handleSendMessage} className="flex items-center gap-2">
         <div className="flex-1 flex gap-2">
           <input
+            ref={textInputRef}
             type="text"
             className="w-full input input-bordered rounded-lg input-sm sm:input-md"
             placeholder="Type a message..."
@@ -105,5 +113,8 @@ const MessageInput = () => {
       </form>
     </div>
   );
-};
+});
+
+MessageInput.displayName = "MessageInput";
+
 export default MessageInput;
