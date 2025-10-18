@@ -7,7 +7,7 @@ export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
   searchResults: [],
-  totalUnreadCount: 0,
+  unreadChatCount: 0,
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
@@ -19,12 +19,11 @@ export const useChatStore = create((set, get) => ({
       const res = await axiosInstance.get("/messages/users");
       set({ users: res.data });
 
-      // Calculate total unread message count
-      const totalUnread = res.data.reduce(
-        (sum, user) => sum + (user.unreadCount || 0),
-        0
-      );
-      set({ totalUnreadCount: totalUnread });
+      // Calculate number of chats with unread messages
+      const unreadChatCount = res.data.filter(
+        (user) => (user.unreadCount || 0) > 0
+      ).length;
+      set({ unreadChatCount: unreadChatCount });
     } catch (error) {
       toast.error(error.response.data.message);
     } finally {
@@ -52,8 +51,8 @@ export const useChatStore = create((set, get) => ({
 
   refreshUnreadCount: async () => {
     try {
-      const res = await axiosInstance.get("/messages/unread");
-      set({ totalUnreadCount: res.data.totalUnreadCount });
+      // Refresh users to get updated unread chat count
+      get().getUsers();
     } catch (error) {
       console.error("Failed to fetch unread count:", error);
     }

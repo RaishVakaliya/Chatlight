@@ -44,9 +44,21 @@ const ChatContainer = () => {
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
-      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
+      // Use setTimeout to ensure DOM is updated before scrolling
+      setTimeout(() => {
+        messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
     }
   }, [messages]);
+
+  // Additional scroll effect for new messages
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 200);
+    }
+  }, [messages.length]);
 
   // Show profile modal if open
   if (isProfileModalOpen) {

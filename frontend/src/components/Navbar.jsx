@@ -24,7 +24,7 @@ const Navbar = () => {
     searchUsers,
     searchResults,
     setSelectedUser,
-    totalUnreadCount,
+    unreadChatCount,
     clearSearchResults,
     getUsers,
     getMessages,
@@ -113,9 +113,9 @@ const Navbar = () => {
                 <div className="relative">
                   <button className="btn btn-sm btn-ghost">
                     <Bell className="size-5" />
-                    {totalUnreadCount > 0 && (
+                    {unreadChatCount > 0 && (
                       <span className="absolute -top-1 -right-1 size-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
-                        {totalUnreadCount > 99 ? "99+" : totalUnreadCount}
+                        {unreadChatCount > 99 ? "99+" : unreadChatCount}
                       </span>
                     )}
                   </button>
@@ -167,9 +167,9 @@ const Navbar = () => {
                 <button className="flex items-center gap-2 p-2">
                   <Bell className="size-5" />
                   <span>Notifications</span>
-                  {totalUnreadCount > 0 && (
+                  {unreadChatCount > 0 && (
                     <span className="ml-auto size-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
-                      {totalUnreadCount > 99 ? "99+" : totalUnreadCount}
+                      {unreadChatCount > 99 ? "99+" : unreadChatCount}
                     </span>
                   )}
                 </button>
