@@ -31,7 +31,7 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
             <img
               src={user.profilePic || "/avatar.png"}
               alt={user.fullName}
-              className="w-40 h-40 rounded-full object-cover border-4 border-base-300"
+              className="w-40 h-40 rounded-full object-cover border-4 border-base-300 select-none"
             />
             {/* Online status indicator */}
             <div
@@ -43,9 +43,6 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
           
           <div>
             <h3 className="text-2xl font-semibold">{user.fullName}</h3>
-            <p className="text-base-content/70">
-              {isOnline ? "Online" : "Last seen recently"}
-            </p>
           </div>
         </div>
 

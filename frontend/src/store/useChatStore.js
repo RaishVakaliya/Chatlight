@@ -7,6 +7,7 @@ export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
   searchResults: [],
+  totalUnreadCount: 0,
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
@@ -17,6 +18,13 @@ export const useChatStore = create((set, get) => ({
     try {
       const res = await axiosInstance.get("/messages/users");
       set({ users: res.data });
+
+      // Calculate total unread message count
+      const totalUnread = res.data.reduce(
+        (sum, user) => sum + (user.unreadCount || 0),
+        0
+      );
+      set({ totalUnreadCount: totalUnread });
     } catch (error) {
       toast.error(error.response.data.message);
     } finally {
@@ -29,12 +37,28 @@ export const useChatStore = create((set, get) => ({
     try {
       const res = await axiosInstance.get(`/messages/${userId}`);
       set({ messages: res.data });
+
+      // Mark messages as read in the database
+      await axiosInstance.put(`/messages/read/${userId}`);
+
+      // Refresh users list to get updated unread counts
+      get().getUsers();
     } catch (error) {
       toast.error(error.response.data.message);
     } finally {
       set({ isMessagesLoading: false });
     }
   },
+
+  refreshUnreadCount: async () => {
+    try {
+      const res = await axiosInstance.get("/messages/unread");
+      set({ totalUnreadCount: res.data.totalUnreadCount });
+    } catch (error) {
+      console.error("Failed to fetch unread count:", error);
+    }
+  },
+
   sendMessage: async (messageData) => {
     const { selectedUser, messages } = get();
     try {
@@ -62,6 +86,15 @@ export const useChatStore = create((set, get) => ({
       set({
         messages: [...get().messages, newMessage],
       });
+    });
+
+    // Listen for new messages from other users to update unread counts
+    socket.on("newMessage", (newMessage) => {
+      const isMessageSentToCurrentUser = newMessage.receiverId === useAuthStore.getState().authUser._id;
+      if (isMessageSentToCurrentUser) {
+        // Refresh users list to update unread counts
+        get().getUsers();
+      }
     });
   },
 

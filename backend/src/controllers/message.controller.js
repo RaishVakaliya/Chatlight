@@ -7,9 +7,27 @@ import { getReceiverSocketId, io } from "../lib/socket.js";
 export const getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
-    const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select("-password");
+    const filteredUsers = await User.find({
+      _id: { $ne: loggedInUserId },
+    }).select("-password");
 
-    res.status(200).json(filteredUsers);
+    // Get unread message counts for each user
+    const usersWithUnreadCounts = await Promise.all(
+      filteredUsers.map(async (user) => {
+        const unreadCount = await Message.countDocuments({
+          senderId: user._id,
+          receiverId: loggedInUserId,
+          read: false,
+        });
+
+        return {
+          ...user._doc,
+          unreadCount,
+        };
+      })
+    );
+
+    res.status(200).json(usersWithUnreadCounts);
   } catch (error) {
     console.error("Error in getUsersForSidebar: ", error.message);
     res.status(500).json({ error: "Internal server error" });
@@ -66,6 +84,47 @@ export const sendMessage = async (req, res) => {
   } catch (error) {
     console.log("Error in sendMessage controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const markMessagesAsRead = async (req, res) => {
+  try {
+    const { senderId } = req.params;
+    const receiverId = req.user._id;
+
+    // Mark all messages from this sender as read
+    await Message.updateMany(
+      {
+        senderId: senderId,
+        receiverId: receiverId,
+        read: false,
+      },
+      {
+        $set: { read: true },
+      }
+    );
+
+    res.status(200).json({ message: "Messages marked as read" });
+  } catch (error) {
+    console.log("Error in markMessagesAsRead Controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const getUnreadMessagesCount = async (req, res) => {
+  try {
+    const loggedInUserId = req.user._id;
+
+    // Count all unread messages sent to the current user
+    const totalUnreadCount = await Message.countDocuments({
+      receiverId: loggedInUserId,
+      read: false,
+    });
+
+    res.status(200).json({ totalUnreadCount });
+  } catch (error) {
+    console.log("Error in getUnreadMessagesCount Controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
