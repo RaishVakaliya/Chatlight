@@ -58,6 +58,13 @@ export const getMessages = async (req, res) => {
         { senderId: myId, receiverId: userToChatId },
         { senderId: userToChatId, receiverId: myId },
       ],
+    }).populate({
+      path: 'replyTo',
+      select: 'text image senderId createdAt',
+      populate: {
+        path: 'senderId',
+        select: 'fullName profilePic'
+      }
     });
 
     // Mark messages sent to current user as read
@@ -115,7 +122,7 @@ export const getMessages = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
-    const { text, image } = req.body;
+    const { text, image, replyTo } = req.body;
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
@@ -131,9 +138,20 @@ export const sendMessage = async (req, res) => {
       receiverId,
       text,
       image: imageUrl,
+      replyTo: replyTo || null,
     });
 
     await newMessage.save();
+
+    // Populate the replyTo field for the response
+    await newMessage.populate({
+      path: 'replyTo',
+      select: 'text image senderId createdAt',
+      populate: {
+        path: 'senderId',
+        select: 'fullName profilePic'
+      }
+    });
 
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {

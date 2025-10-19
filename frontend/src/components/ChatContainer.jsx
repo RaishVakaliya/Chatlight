@@ -9,6 +9,8 @@ import UserProfileModal from "./UserProfileModal";
 import ImagePreviewModal from "./ImagePreviewModal";
 import PinnedMessages from "./PinnedMessages";
 import MessageContextMenu from "./MessageContextMenu";
+import ReplyPreview from "./ReplyPreview";
+import ReplyMessage from "./ReplyMessage";
 import { useAuthStore } from "../store/useAuthStore";
 import useBackgroundStore from "../store/useBackgroundStore";
 import { formatMessageTime } from "../lib/utils";
@@ -52,6 +54,18 @@ const ChatContainer = () => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [activeContextMenu, setActiveContextMenu] = useState(null);
+
+  const scrollToMessage = (messageId) => {
+    const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (messageElement) {
+      messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Add highlight effect
+      messageElement.classList.add("bg-yellow-100", "dark:bg-yellow-900/30");
+      setTimeout(() => {
+        messageElement.classList.remove("bg-yellow-100", "dark:bg-yellow-900/30");
+      }, 2000);
+    }
+  };
 
   useEffect(() => {
     getMessages(selectedUser._id);
@@ -165,7 +179,7 @@ const ChatContainer = () => {
             <div className="relative chat-bubble flex flex-col break-words whitespace-pre-wrap">
               {/* Pin indicator */}
               {message.pinned && (
-                <div className="absolute -top-2 -right-2 bg-primary text-primary-content rounded-full p-1">
+                <div className="absolute -top-2 -left-2 bg-primary text-primary-content rounded-full p-1">
                   <Pin className="w-3 h-3" />
                 </div>
               )}
@@ -178,6 +192,14 @@ const ChatContainer = () => {
                   isOwnMessage={message.senderId === authUser._id}
                 />
               </div>
+
+              {/* Reply message display */}
+              {message.replyTo && (
+                <ReplyMessage 
+                  replyTo={message.replyTo} 
+                  onClick={() => scrollToMessage(message.replyTo._id)}
+                />
+              )}
 
               {message.image && (
                 <img
@@ -203,6 +225,9 @@ const ChatContainer = () => {
           </div>
         ))}
       </div>
+
+      {/* Reply Preview */}
+      <ReplyPreview />
 
       <MessageInput ref={messageInputRef} />
 

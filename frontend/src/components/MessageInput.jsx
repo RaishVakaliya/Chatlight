@@ -8,7 +8,7 @@ const MessageInput = forwardRef((props, ref) => {
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const textInputRef = useRef(null);
-  const { sendMessage } = useChatStore();
+  const { sendMessage, replyingTo, clearReplyingTo } = useChatStore();
 
   useImperativeHandle(ref, () => ({
     focus: () => {
@@ -43,11 +43,13 @@ const MessageInput = forwardRef((props, ref) => {
       await sendMessage({
         text: text.trim(),
         image: imagePreview,
+        replyTo: replyingTo?._id,
       });
 
       // Clear form
       setText("");
       setImagePreview(null);
+      clearReplyingTo();
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       console.error("Failed to send message:", error);

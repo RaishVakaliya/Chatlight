@@ -8,6 +8,7 @@ export const useChatStore = create((set, get) => ({
   users: [],
   searchResults: [],
   pinnedMessages: [],
+  replyingTo: null,
   unreadChatCount: 0,
   selectedUser: null,
   isUsersLoading: false,
@@ -307,4 +308,8 @@ export const useChatStore = create((set, get) => ({
       toast.error(error.response?.data?.message || "Failed to unpin message");
     }
   },
+
+  setReplyingTo: (message) => set({ replyingTo: message }),
+  
+  clearReplyingTo: () => set({ replyingTo: null }),
 }));

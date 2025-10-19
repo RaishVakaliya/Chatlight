@@ -5,8 +5,13 @@ Highlights:
 - Tech stack: MERN + Socket.io + TailwindCSS + Daisy UI
 - Authentication && Authorization with JWT
 - Real-time messaging with Socket.io
+- Message pinning functionality (like WhatsApp)
+- Message replies with context display
 - Online user status
 - Global state management with Zustand
+- Mobile-responsive design
+- Custom background themes
+- Image sharing with preview
 - Error handling both on the server and on the client
 - At the end Deployment like a pro for FREE!
 - And much more!
@@ -38,4 +43,4 @@ npm start
 ```
 
 <!-- to do -->
-<!-- Message pinning, Message replies, Custom backgrounds, Login history  -->
+<!-- Login history -->

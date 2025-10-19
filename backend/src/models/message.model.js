@@ -33,6 +33,10 @@ const messageSchema = new mongoose.Schema(
     pinnedAt: {
       type: Date,
     },
+    replyTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Message",
+    },
   },
   { timestamps: true }
 );
