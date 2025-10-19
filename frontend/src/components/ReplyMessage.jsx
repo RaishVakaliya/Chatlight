@@ -13,7 +13,7 @@ const ReplyMessage = ({ replyTo, onClick }) => {
 
   return (
     <div 
-      className="bg-base-200/50 border-l-4 border-primary rounded-r-lg p-2 mb-2 cursor-pointer hover:bg-base-200/70 transition-colors touch-manipulation"
+      className="bg-base-200/50 border-l-4 border-primary rounded-lg p-2 mb-2 cursor-pointer hover:bg-base-200/70 transition-colors touch-manipulation"
       onClick={onClick}
     >
       <div className="flex items-center gap-2 mb-1">

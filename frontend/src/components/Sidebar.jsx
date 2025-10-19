@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
+import UserItem from "./UserItem";
 import { Users } from "lucide-react";
 
 const Sidebar = () => {
@@ -10,14 +11,27 @@ const Sidebar = () => {
 
   const { onlineUsers } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
   useEffect(() => {
-    getUsers();
-  }, [getUsers]);
+    // Only load users once when component mounts
+    if (!hasInitialLoad && users.length === 0) {
+      getUsers();
+      setHasInitialLoad(true);
+    }
+  }, [getUsers, hasInitialLoad, users.length]);
 
-  const filteredUsers = showOnlineOnly
-    ? users.filter((user) => onlineUsers.includes(user._id))
-    : users;
+  // Memoize filtered users to prevent unnecessary recalculations
+  const filteredUsers = useMemo(() => {
+    return showOnlineOnly
+      ? users.filter((user) => onlineUsers.includes(user._id))
+      : users;
+  }, [users, showOnlineOnly, onlineUsers]);
+
+  // Memoize the user selection handler
+  const handleUserSelect = useCallback((user) => {
+    setSelectedUser(user);
+  }, [setSelectedUser]);
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
@@ -47,46 +61,13 @@ const Sidebar = () => {
 
       <div className="overflow-y-auto w-full py-3">
         {filteredUsers.map((user) => (
-          <button
+          <UserItem
             key={user._id}
-            onClick={() => setSelectedUser(user)}
-            className={`
-              w-full p-3 flex items-center gap-3
-              hover:bg-base-300 transition-colors
-              ${
-                selectedUser?._id === user._id
-                  ? "bg-base-300 ring-1 ring-base-300"
-                  : ""
-              }
-            `}
-          >
-            <div className="relative mx-auto lg:mx-0 select-none">
-              <img
-                src={user.profilePic || "/avatar.png"}
-                alt={user.name}
-                className="size-12 object-cover rounded-full"
-              />
-              {onlineUsers.includes(user._id) && (
-                <span
-                  className="absolute bottom-0 right-0 size-3 bg-green-500 
-                  rounded-full ring-2 ring-zinc-900"
-                />
-              )}
-              {user.unreadCount > 0 && (
-                <div className="absolute -top-2 -right-2 size-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold ring-2 ring-base-100">
-                  {user.unreadCount > 9 ? "9+" : user.unreadCount}
-                </div>
-              )}
-            </div>
-
-            {/* User info - only visible on larger screens */}
-            <div className="hidden lg:block text-left min-w-0">
-              <div className="font-medium truncate">{user.fullName}</div>
-              <div className="text-sm text-zinc-400">
-                {onlineUsers.includes(user._id) ? "Online" : "Offline"}
-              </div>
-            </div>
-          </button>
+            user={user}
+            selectedUser={selectedUser}
+            onlineUsers={onlineUsers}
+            onSelectUser={handleUserSelect}
+          />
         ))}
 
         {filteredUsers.length === 0 && (

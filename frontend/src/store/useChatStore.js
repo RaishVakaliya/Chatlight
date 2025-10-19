@@ -43,13 +43,33 @@ export const useChatStore = create((set, get) => ({
       // Mark messages as read in the database
       await axiosInstance.put(`/messages/read/${userId}`);
 
-      // Refresh users list to get updated unread counts
-      get().getUsers();
+      // Update only the specific user's unread count instead of refreshing all users
+      get().updateUserUnreadCount(userId, 0);
     } catch (error) {
       toast.error(error.response.data.message);
     } finally {
       set({ isMessagesLoading: false });
     }
+  },
+
+  updateUserUnreadCount: (userId, newCount) => {
+    const { users } = get();
+    const updatedUsers = users.map((user) => {
+      if (user._id === userId) {
+        return { ...user, unreadCount: newCount };
+      }
+      return user;
+    });
+
+    // Recalculate total unread chat count
+    const unreadChatCount = updatedUsers.filter(
+      (user) => (user.unreadCount || 0) > 0
+    ).length;
+
+    set({ 
+      users: updatedUsers,
+      unreadChatCount: unreadChatCount
+    });
   },
 
   refreshUnreadCount: async () => {
@@ -115,33 +135,44 @@ export const useChatStore = create((set, get) => ({
       const isMessageSentToCurrentUser =
         newMessage.receiverId === useAuthStore.getState().authUser._id;
       if (isMessageSentToCurrentUser) {
-        // Update the specific user's last message time and re-sort
-        const { users } = get();
-        const updatedUsers = users.map((user) => {
-          if (user._id === newMessage.senderId) {
-            return {
-              ...user,
-              unreadCount: (user.unreadCount || 0) + 1,
-              lastMessageTime: newMessage.createdAt,
-            };
-          }
-          return user;
-        });
+        // Use the selective update function instead of full users array manipulation
+        const { users, selectedUser } = get();
+        const senderUser = users.find(user => user._id === newMessage.senderId);
+        
+        if (senderUser) {
+          // Only increment unread count if this chat is not currently selected
+          const shouldIncrementUnread = !selectedUser || selectedUser._id !== newMessage.senderId;
+          const newUnreadCount = shouldIncrementUnread 
+            ? (senderUser.unreadCount || 0) + 1 
+            : (senderUser.unreadCount || 0);
 
-        // Sort users by last message time (most recent first)
-        const sortedUsers = updatedUsers.sort((a, b) => {
-          return new Date(b.lastMessageTime) - new Date(a.lastMessageTime);
-        });
+          // Update the specific user with new unread count and last message time
+          const updatedUsers = users.map((user) => {
+            if (user._id === newMessage.senderId) {
+              return {
+                ...user,
+                unreadCount: newUnreadCount,
+                lastMessageTime: newMessage.createdAt,
+              };
+            }
+            return user;
+          });
 
-        // Update unread chat count
-        const unreadChatCount = sortedUsers.filter(
-          (user) => (user.unreadCount || 0) > 0
-        ).length;
+          // Sort users by last message time (most recent first)
+          const sortedUsers = updatedUsers.sort((a, b) => {
+            return new Date(b.lastMessageTime) - new Date(a.lastMessageTime);
+          });
 
-        set({
-          users: sortedUsers,
-          unreadChatCount: unreadChatCount,
-        });
+          // Update unread chat count
+          const unreadChatCount = sortedUsers.filter(
+            (user) => (user.unreadCount || 0) > 0
+          ).length;
+
+          set({
+            users: sortedUsers,
+            unreadChatCount: unreadChatCount,
+          });
+        }
       }
     });
 
