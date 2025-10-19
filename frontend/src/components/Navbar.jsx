@@ -153,7 +153,10 @@ const Navbar = () => {
                   <span className="hidden sm:inline">Profile</span>
                 </Link>
 
-                <button className="btn btn-sm gap-2" onClick={handleLogoutClick}>
+                <button
+                  className="btn btn-sm gap-2"
+                  onClick={handleLogoutClick}
+                >
                   <LogOut className="size-5" />
                   <span className="hidden sm:inline">Logout</span>
                 </button>
@@ -190,18 +193,6 @@ const Navbar = () => {
                 </button>
               </>
             )}
-
-            <button
-              className="flex items-center gap-2 p-2"
-              onClick={toggleTheme}
-            >
-              {theme === "dark" ? (
-                <Sun className="size-5" />
-              ) : (
-                <Moon className="size-5" />
-              )}
-              <span>Theme</span>
-            </button>
 
             <Link to={"/settings"} className="flex items-center gap-2 p-2">
               <Settings className="size-5" />

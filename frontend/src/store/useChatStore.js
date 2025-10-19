@@ -7,11 +7,13 @@ export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
   searchResults: [],
+  pinnedMessages: [],
   unreadChatCount: 0,
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
   isSearching: false,
+  isPinnedMessagesLoading: false,
 
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -65,7 +67,7 @@ export const useChatStore = create((set, get) => ({
         `/messages/send/${selectedUser._id}`,
         messageData
       );
-      
+
       // Update messages
       set({ messages: [...messages, res.data] });
 
@@ -109,7 +111,8 @@ export const useChatStore = create((set, get) => ({
 
     // Listen for new messages from other users to update unread counts and sort
     socket.on("newMessage", (newMessage) => {
-      const isMessageSentToCurrentUser = newMessage.receiverId === useAuthStore.getState().authUser._id;
+      const isMessageSentToCurrentUser =
+        newMessage.receiverId === useAuthStore.getState().authUser._id;
       if (isMessageSentToCurrentUser) {
         // Update the specific user's last message time and re-sort
         const { users } = get();
@@ -134,9 +137,9 @@ export const useChatStore = create((set, get) => ({
           (user) => (user.unreadCount || 0) > 0
         ).length;
 
-        set({ 
+        set({
           users: sortedUsers,
-          unreadChatCount: unreadChatCount
+          unreadChatCount: unreadChatCount,
         });
       }
     });
@@ -145,7 +148,7 @@ export const useChatStore = create((set, get) => ({
     socket.on("messagesRead", (data) => {
       const { messageIds } = data;
       const { messages } = get();
-      
+
       // Update read status for the specified messages
       const updatedMessages = messages.map((message) => {
         if (messageIds.includes(message._id)) {
@@ -153,8 +156,51 @@ export const useChatStore = create((set, get) => ({
         }
         return message;
       });
-      
+
       set({ messages: updatedMessages });
+    });
+
+    // Listen for message pinned events
+    socket.on("messagePinned", (pinnedMessage) => {
+      const { messages, pinnedMessages } = get();
+
+      // Update message in current messages
+      const updatedMessages = messages.map((msg) =>
+        msg._id === pinnedMessage._id ? pinnedMessage : msg
+      );
+
+      // Add to pinned messages if not already there
+      const isAlreadyPinned = pinnedMessages.some(
+        (msg) => msg._id === pinnedMessage._id
+      );
+      const updatedPinnedMessages = isAlreadyPinned
+        ? pinnedMessages
+        : [pinnedMessage, ...pinnedMessages];
+
+      set({
+        messages: updatedMessages,
+        pinnedMessages: updatedPinnedMessages,
+      });
+    });
+
+    // Listen for message unpinned events
+    socket.on("messageUnpinned", (unpinnedMessage) => {
+      const { messages, pinnedMessages } = get();
+
+      // Update message in current messages
+      const updatedMessages = messages.map((msg) =>
+        msg._id === unpinnedMessage._id ? unpinnedMessage : msg
+      );
+
+      // Remove from pinned messages
+      const updatedPinnedMessages = pinnedMessages.filter(
+        (msg) => msg._id !== unpinnedMessage._id
+      );
+
+      set({
+        messages: updatedMessages,
+        pinnedMessages: updatedPinnedMessages,
+      });
     });
   },
 
@@ -162,6 +208,8 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     socket.off("newMessage");
     socket.off("messagesRead");
+    socket.off("messagePinned");
+    socket.off("messageUnpinned");
   },
 
   searchUsers: async (query) => {
@@ -186,4 +234,77 @@ export const useChatStore = create((set, get) => ({
   clearSelectedUser: () => set({ selectedUser: null, messages: [] }),
 
   clearSearchResults: () => set({ searchResults: [] }),
+
+  getPinnedMessages: async (userId) => {
+    set({ isPinnedMessagesLoading: true });
+    try {
+      const res = await axiosInstance.get(`/messages/pinned/${userId}`);
+      set({ pinnedMessages: res.data });
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to fetch pinned messages"
+      );
+    } finally {
+      set({ isPinnedMessagesLoading: false });
+    }
+  },
+
+  pinMessage: async (messageId) => {
+    try {
+      const res = await axiosInstance.put(`/messages/pin/${messageId}`);
+
+      // Update the message in current messages
+      const { messages } = get();
+      const updatedMessages = messages.map((msg) =>
+        msg._id === messageId
+          ? {
+              ...msg,
+              pinned: true,
+              pinnedBy: res.data.pinnedBy,
+              pinnedAt: res.data.pinnedAt,
+            }
+          : msg
+      );
+      set({ messages: updatedMessages });
+
+      // Add to pinned messages if not already there
+      const { pinnedMessages } = get();
+      const isAlreadyPinned = pinnedMessages.some(
+        (msg) => msg._id === messageId
+      );
+      if (!isAlreadyPinned) {
+        set({ pinnedMessages: [res.data, ...pinnedMessages] });
+      }
+
+      toast.success("Message pinned");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to pin message");
+    }
+  },
+
+  unpinMessage: async (messageId) => {
+    try {
+      const res = await axiosInstance.put(`/messages/unpin/${messageId}`);
+
+      // Update the message in current messages
+      const { messages } = get();
+      const updatedMessages = messages.map((msg) =>
+        msg._id === messageId
+          ? { ...msg, pinned: false, pinnedBy: null, pinnedAt: null }
+          : msg
+      );
+      set({ messages: updatedMessages });
+
+      // Remove from pinned messages
+      const { pinnedMessages } = get();
+      const updatedPinnedMessages = pinnedMessages.filter(
+        (msg) => msg._id !== messageId
+      );
+      set({ pinnedMessages: updatedPinnedMessages });
+
+      toast.success("Message unpinned");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to unpin message");
+    }
+  },
 }));

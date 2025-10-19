@@ -36,3 +36,6 @@ npm run build
 ```shell
 npm start
 ```
+
+<!-- to do -->
+<!-- Message pinning, Message replies, Custom backgrounds, Login history  -->

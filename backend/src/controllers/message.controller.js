@@ -225,3 +225,119 @@ export const searchUsers = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+export const pinMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user._id;
+
+    // Find the message
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Check if user is part of this conversation
+    const isParticipant = 
+      message.senderId.toString() === userId.toString() || 
+      message.receiverId.toString() === userId.toString();
+
+    if (!isParticipant) {
+      return res.status(403).json({ message: "Not authorized to pin this message" });
+    }
+
+    // Update message to pinned
+    const updatedMessage = await Message.findByIdAndUpdate(
+      messageId,
+      {
+        pinned: true,
+        pinnedBy: userId,
+        pinnedAt: new Date(),
+      },
+      { new: true }
+    );
+
+    // Emit socket event to both users
+    const otherUserId = message.senderId.toString() === userId.toString() 
+      ? message.receiverId 
+      : message.senderId;
+    
+    const receiverSocketId = getReceiverSocketId(otherUserId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("messagePinned", updatedMessage);
+    }
+
+    res.status(200).json(updatedMessage);
+  } catch (error) {
+    console.error("Error in pinMessage Controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const unpinMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user._id;
+
+    // Find the message
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Check if user is part of this conversation
+    const isParticipant = 
+      message.senderId.toString() === userId.toString() || 
+      message.receiverId.toString() === userId.toString();
+
+    if (!isParticipant) {
+      return res.status(403).json({ message: "Not authorized to unpin this message" });
+    }
+
+    // Update message to unpinned
+    const updatedMessage = await Message.findByIdAndUpdate(
+      messageId,
+      {
+        pinned: false,
+        pinnedBy: null,
+        pinnedAt: null,
+      },
+      { new: true }
+    );
+
+    // Emit socket event to both users
+    const otherUserId = message.senderId.toString() === userId.toString() 
+      ? message.receiverId 
+      : message.senderId;
+    
+    const receiverSocketId = getReceiverSocketId(otherUserId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("messageUnpinned", updatedMessage);
+    }
+
+    res.status(200).json(updatedMessage);
+  } catch (error) {
+    console.error("Error in unpinMessage Controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const getPinnedMessages = async (req, res) => {
+  try {
+    const { id: userToChatId } = req.params;
+    const myId = req.user._id;
+
+    const pinnedMessages = await Message.find({
+      $or: [
+        { senderId: myId, receiverId: userToChatId },
+        { senderId: userToChatId, receiverId: myId },
+      ],
+      pinned: true,
+    }).sort({ pinnedAt: -1 });
+
+    res.status(200).json(pinnedMessages);
+  } catch (error) {
+    console.error("Error in getPinnedMessages Controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};

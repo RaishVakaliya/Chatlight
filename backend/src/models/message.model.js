@@ -22,6 +22,17 @@ const messageSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    pinned: {
+      type: Boolean,
+      default: false,
+    },
+    pinnedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    pinnedAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );
