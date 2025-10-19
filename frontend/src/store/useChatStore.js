@@ -92,12 +92,18 @@ export const useChatStore = create((set, get) => ({
       // Update messages
       set({ messages: [...messages, res.data] });
 
-      // Update the selected user's last message time and re-sort users
+      // Update the selected user's last message time and last message data, then re-sort users
       const updatedUsers = users.map((user) => {
         if (user._id === selectedUser._id) {
           return {
             ...user,
             lastMessageTime: res.data.createdAt,
+            lastMessage: {
+              text: res.data.text,
+              image: res.data.image,
+              senderId: res.data.senderId,
+              createdAt: res.data.createdAt
+            }
           };
         }
         return user;
@@ -146,13 +152,19 @@ export const useChatStore = create((set, get) => ({
             ? (senderUser.unreadCount || 0) + 1 
             : (senderUser.unreadCount || 0);
 
-          // Update the specific user with new unread count and last message time
+          // Update the specific user with new unread count, last message time, and last message data
           const updatedUsers = users.map((user) => {
             if (user._id === newMessage.senderId) {
               return {
                 ...user,
                 unreadCount: newUnreadCount,
                 lastMessageTime: newMessage.createdAt,
+                lastMessage: {
+                  text: newMessage.text,
+                  image: newMessage.image,
+                  senderId: newMessage.senderId,
+                  createdAt: newMessage.createdAt
+                }
               };
             }
             return user;

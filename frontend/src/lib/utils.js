@@ -5,3 +5,28 @@ export function formatMessageTime(date) {
     hour12: false,
   });
 }
+
+export function truncateText(text, maxLength = 30) {
+  if (!text) return "";
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + "...";
+}
+
+export function formatLastMessage(lastMessage, currentUserId) {
+  if (!lastMessage) return "No messages yet";
+  
+  // If it's an image message
+  if (lastMessage.image && !lastMessage.text) {
+    const sender = lastMessage.senderId === currentUserId ? "You" : "";
+    return `${sender ? "You: " : ""}📷 Photo`;
+  }
+  
+  // If it has text
+  if (lastMessage.text) {
+    const sender = lastMessage.senderId === currentUserId ? "You" : "";
+    const truncatedText = truncateText(lastMessage.text, 25);
+    return `${sender ? "You: " : ""}${truncatedText}`;
+  }
+  
+  return "No messages yet";
+}

@@ -20,7 +20,7 @@ export const getUsersForSidebar = async (req, res) => {
           read: false,
         });
 
-        // Get the last message time between current user and this user
+        // Get the last message between current user and this user
         const lastMessage = await Message.findOne({
           $or: [
             { senderId: user._id, receiverId: loggedInUserId },
@@ -32,6 +32,12 @@ export const getUsersForSidebar = async (req, res) => {
           ...user._doc,
           unreadCount,
           lastMessageTime: lastMessage ? lastMessage.createdAt : user.createdAt,
+          lastMessage: lastMessage ? {
+            text: lastMessage.text,
+            image: lastMessage.image,
+            senderId: lastMessage.senderId,
+            createdAt: lastMessage.createdAt
+          } : null,
         };
       })
     );
