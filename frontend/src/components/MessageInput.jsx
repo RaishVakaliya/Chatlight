@@ -12,7 +12,17 @@ const MessageInput = forwardRef((props, ref) => {
 
   useImperativeHandle(ref, () => ({
     focus: () => {
-      textInputRef.current?.focus();
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        if (textInputRef.current) {
+          textInputRef.current.focus();
+          // Also set cursor to end of text if there's any
+          textInputRef.current.setSelectionRange(
+            textInputRef.current.value.length,
+            textInputRef.current.value.length
+          );
+        }
+      });
     }
   }));
 
@@ -51,6 +61,11 @@ const MessageInput = forwardRef((props, ref) => {
       setImagePreview(null);
       clearReplyingTo();
       if (fileInputRef.current) fileInputRef.current.value = "";
+      
+      // Keep focus on input after sending message
+      setTimeout(() => {
+        textInputRef.current?.focus();
+      }, 50);
     } catch (error) {
       console.error("Failed to send message:", error);
     }

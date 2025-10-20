@@ -3,7 +3,7 @@ import { Pin, PinOff, Copy, Reply, ChevronDown } from "lucide-react";
 import { useChatStore } from "../store/useChatStore";
 import toast from "react-hot-toast";
 
-const MessageContextMenu = ({ message, onClose, isOwnMessage }) => {
+const MessageContextMenu = ({ message, onClose, isOwnMessage, onReply }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const { pinMessage, unpinMessage, setReplyingTo } = useChatStore();
@@ -48,6 +48,10 @@ const MessageContextMenu = ({ message, onClose, isOwnMessage }) => {
     setReplyingTo(message);
     setIsOpen(false);
     onClose();
+    // Focus the input field after setting reply
+    if (onReply) {
+      onReply();
+    }
   };
 
   return (

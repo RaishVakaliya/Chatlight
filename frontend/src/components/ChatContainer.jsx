@@ -72,12 +72,22 @@ const ChatContainer = () => {
 
     subscribeToMessages();
 
-    // Focus the message input when opening a chat
-    setTimeout(() => {
-      messageInputRef.current?.focus();
-    }, 100);
+    // Focus the message input when opening a chat with improved timing
+    const focusInput = () => {
+      if (messageInputRef.current?.focus) {
+        messageInputRef.current.focus();
+      }
+    };
 
-    return () => unsubscribeFromMessages();
+    // Use multiple timeouts to ensure focus works reliably
+    const focusTimeout1 = setTimeout(focusInput, 100);
+    const focusTimeout2 = setTimeout(focusInput, 300);
+
+    return () => {
+      unsubscribeFromMessages();
+      clearTimeout(focusTimeout1);
+      clearTimeout(focusTimeout2);
+    };
   }, [
     selectedUser._id,
     getMessages,
@@ -102,6 +112,17 @@ const ChatContainer = () => {
       }, 200);
     }
   }, [messages.length]);
+
+  // Focus input after messages are loaded
+  useEffect(() => {
+    if (!isMessagesLoading && messages) {
+      setTimeout(() => {
+        if (messageInputRef.current?.focus) {
+          messageInputRef.current.focus();
+        }
+      }, 150);
+    }
+  }, [isMessagesLoading, messages]);
 
   // Show profile modal if open
   if (isProfileModalOpen) {
@@ -190,6 +211,14 @@ const ChatContainer = () => {
                   message={message}
                   onClose={() => setActiveContextMenu(null)}
                   isOwnMessage={message.senderId === authUser._id}
+                  onReply={() => {
+                    // Focus input field when reply is clicked
+                    setTimeout(() => {
+                      if (messageInputRef.current?.focus) {
+                        messageInputRef.current.focus();
+                      }
+                    }, 100);
+                  }}
                 />
               </div>
 
