@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import logo from "../assets/app_logo.png";
 import { useChatStore } from "../store/useChatStore";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import LogoutConfirmationModal from "./LogoutConfirmationModal";
 
 const Navbar = () => {
@@ -36,6 +36,7 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const mobileMenuRef = useRef(null);
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -45,6 +46,26 @@ const Navbar = () => {
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
+
+  // Handle outside click to close mobile menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target)
+      ) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    if (isMobileMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
 
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
@@ -98,7 +119,33 @@ const Navbar = () => {
           </div>
 
           {/* Mobile hamburger menu */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center gap-3">
+            {authUser && (
+              <div className="flex items-center">
+                <button
+                  onClick={() => {
+                    setShowSearch(!showSearch);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`btn btn-sm btn-ghost ${
+                    showSearch ? "text-primary" : ""
+                  }`}
+                >
+                  <Search className="size-5" />
+                </button>
+
+                <div className="relative">
+                  <button className="btn btn-sm btn-ghost">
+                    <Bell className="size-5" />
+                    {unreadChatCount > 0 && (
+                      <span className="absolute -top-1 right-1 size-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
+                        {unreadChatCount > 99 ? "99+" : unreadChatCount}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
             <button
               onClick={toggleMobileMenu}
               className="p-2"
@@ -129,7 +176,7 @@ const Navbar = () => {
                   <button className="btn btn-sm btn-ghost">
                     <Bell className="size-5" />
                     {unreadChatCount > 0 && (
-                      <span className="absolute -top-1 -right-1 size-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
+                      <span className="absolute -top-1 right-1 size-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
                         {unreadChatCount > 99 ? "99+" : unreadChatCount}
                       </span>
                     )}
@@ -168,32 +215,11 @@ const Navbar = () => {
 
       {/* Mobile menu dropdown */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-16 left-0 w-full bg-base-100 border-b border-base-300 shadow-lg z-50">
+        <div
+          ref={mobileMenuRef}
+          className="md:hidden absolute top-16 right-0 w-1/2 bg-base-100 border-b border-l border-base-300 shadow-lg z-50 rounded-bl-lg"
+        >
           <div className="flex flex-col p-4 space-y-3">
-            {authUser && (
-              <>
-                <button
-                  className="flex items-center gap-2 p-2"
-                  onClick={() => {
-                    setShowSearch(!showSearch);
-                    setIsMobileMenuOpen(false);
-                  }}
-                >
-                  <Search className="size-5" />
-                  <span>Search</span>
-                </button>
-                <button className="flex items-center gap-2 p-2">
-                  <Bell className="size-5" />
-                  <span>Notifications</span>
-                  {unreadChatCount > 0 && (
-                    <span className="ml-auto size-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
-                      {unreadChatCount > 99 ? "99+" : unreadChatCount}
-                    </span>
-                  )}
-                </button>
-              </>
-            )}
-
             <Link to={"/settings"} className="flex items-center gap-2 p-2">
               <Settings className="size-5" />
               <span>Settings</span>
