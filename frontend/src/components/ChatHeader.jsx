@@ -8,7 +8,7 @@ const ChatHeader = ({ onProfileClick }) => {
 
   return (
     <>
-      <div className="p-2.5 border-b border-base-300">
+      <div className="p-1 border-b border-base-300">
         <div className="flex items-center justify-between">
           <div
             className="flex items-center gap-3 cursor-pointer hover:bg-base-200 p-2 rounded-lg transition-colors"

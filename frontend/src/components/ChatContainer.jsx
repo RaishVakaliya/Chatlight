@@ -231,12 +231,26 @@ const ChatContainer = () => {
               )}
 
               {message.image && (
-                <img
-                  src={message.image}
-                  alt="Attachment"
-                  className="max-w-full w-auto max-h-80 sm:max-w-md md:max-w-lg rounded-md mb-2 cursor-pointer hover:opacity-90 transition-opacity object-contain"
-                  onClick={() => setSelectedImage(message.image)}
-                />
+                <div className="relative">
+                  <img
+                    src={message.image}
+                    alt="Attachment"
+                    className={`max-w-full w-auto max-h-80 sm:max-w-md md:max-w-lg rounded-md mb-2 cursor-pointer hover:opacity-90 transition-opacity object-contain ${
+                      message.isUploading ? "opacity-60" : ""
+                    }`}
+                    onClick={() => !message.isUploading && setSelectedImage(message.image)}
+                  />
+                  {message.isUploading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-md">
+                      <div className="loading loading-spinner loading-md text-white"></div>
+                    </div>
+                  )}
+                  {message.uploadFailed && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-red-500/20 rounded-md">
+                      <span className="text-red-500 text-sm font-medium">Upload failed</span>
+                    </div>
+                  )}
+                </div>
               )}
               {message.text && <p>{message.text}</p>}
 

@@ -132,18 +132,12 @@ export const sendMessage = async (req, res) => {
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
-    let imageUrl;
-    if (image) {
-      // Upload base64 image to cloudinary
-      const uploadResponse = await cloudinary.uploader.upload(image);
-      imageUrl = uploadResponse.secure_url;
-    }
-
+    // Create message immediately with temporary image data
     const newMessage = new Message({
       senderId,
       receiverId,
       text,
-      image: imageUrl,
+      image: image ? "uploading..." : null, // Temporary placeholder
       replyTo: replyTo || null,
     });
 
@@ -159,12 +153,86 @@ export const sendMessage = async (req, res) => {
       }
     });
 
+    // Send immediate response with temporary image
+    const responseMessage = {
+      ...newMessage.toObject(),
+      image: image || null, // Send original base64 for immediate display
+      isUploading: !!image // Flag to indicate upload in progress
+    };
+
+    // Emit to receiver immediately
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", newMessage);
+      io.to(receiverSocketId).emit("newMessage", responseMessage);
     }
 
-    res.status(201).json(newMessage);
+    // Send response immediately
+    res.status(201).json(responseMessage);
+
+    // Upload image in background if present
+    if (image) {
+      try {
+        const uploadResponse = await cloudinary.uploader.upload(image, {
+          resource_type: "auto",
+          quality: "auto:good",
+          fetch_format: "auto"
+        });
+        
+        // Update message with actual image URL
+        const updatedMessage = await Message.findByIdAndUpdate(
+          newMessage._id,
+          { image: uploadResponse.secure_url },
+          { new: true }
+        ).populate({
+          path: 'replyTo',
+          select: 'text image senderId createdAt',
+          populate: {
+            path: 'senderId',
+            select: 'fullName profilePic'
+          }
+        });
+
+        // Emit update to both users
+        const finalMessage = {
+          ...updatedMessage.toObject(),
+          isUploading: false
+        };
+
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit("messageUpdated", finalMessage);
+        }
+        
+        const senderSocketId = getReceiverSocketId(senderId);
+        if (senderSocketId) {
+          io.to(senderSocketId).emit("messageUpdated", finalMessage);
+        }
+      } catch (uploadError) {
+        console.error("Error uploading image:", uploadError);
+        
+        // Update message to indicate upload failure
+        await Message.findByIdAndUpdate(
+          newMessage._id,
+          { image: null }
+        );
+
+        // Emit failure to both users
+        const failedMessage = {
+          ...newMessage.toObject(),
+          image: null,
+          isUploading: false,
+          uploadFailed: true
+        };
+
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit("messageUpdated", failedMessage);
+        }
+        
+        const senderSocketId = getReceiverSocketId(senderId);
+        if (senderSocketId) {
+          io.to(senderSocketId).emit("messageUpdated", failedMessage);
+        }
+      }
+    }
   } catch (error) {
     console.log("Error in sendMessage controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });

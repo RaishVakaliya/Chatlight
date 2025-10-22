@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 const MessageInput = forwardRef((props, ref) => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
+  const [isSending, setIsSending] = useState(false);
   const fileInputRef = useRef(null);
   const textInputRef = useRef(null);
   const { sendMessage, replyingTo, clearReplyingTo } = useChatStore();
@@ -26,18 +27,60 @@ const MessageInput = forwardRef((props, ref) => {
     }
   }));
 
-  const handleImageChange = (e) => {
+  const compressImage = (file, maxWidth = 1024, quality = 0.8) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new window.Image(); // Use window.Image to avoid conflict with lucide-react Image
+      
+      img.onload = () => {
+        // Calculate new dimensions
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedDataUrl);
+      };
+      
+      img.onerror = () => {
+        // Fallback: return original file as base64 if compression fails
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
-    };
-    reader.readAsDataURL(file);
+    // Show loading state
+    toast.loading("Processing image...", { id: "image-processing" });
+    
+    try {
+      // Compress image before setting preview
+      const compressedImage = await compressImage(file);
+      setImagePreview(compressedImage);
+      toast.dismiss("image-processing");
+    } catch (error) {
+      console.error("Error compressing image:", error);
+      toast.error("Failed to process image");
+      toast.dismiss("image-processing");
+    }
   };
 
   const removeImage = () => {
@@ -48,19 +91,25 @@ const MessageInput = forwardRef((props, ref) => {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!text.trim() && !imagePreview) return;
+    if (isSending) return; // Prevent double sending
+
+    setIsSending(true);
+    
+    // Store current values before clearing
+    const messageData = {
+      text: text.trim(),
+      image: imagePreview,
+      replyTo: replyingTo?._id,
+    };
+
+    // Clear form immediately for better UX
+    setText("");
+    setImagePreview(null);
+    clearReplyingTo();
+    if (fileInputRef.current) fileInputRef.current.value = "";
 
     try {
-      await sendMessage({
-        text: text.trim(),
-        image: imagePreview,
-        replyTo: replyingTo?._id,
-      });
-
-      // Clear form
-      setText("");
-      setImagePreview(null);
-      clearReplyingTo();
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      await sendMessage(messageData);
       
       // Keep focus on input after sending message
       setTimeout(() => {
@@ -68,6 +117,12 @@ const MessageInput = forwardRef((props, ref) => {
       }, 50);
     } catch (error) {
       console.error("Failed to send message:", error);
+      // Restore form data on error
+      setText(messageData.text);
+      setImagePreview(messageData.image);
+      toast.error("Failed to send message. Please try again.");
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -123,9 +178,13 @@ const MessageInput = forwardRef((props, ref) => {
         <button
           type="submit"
           className="btn btn-sm btn-circle"
-          disabled={!text.trim() && !imagePreview}
+          disabled={(!text.trim() && !imagePreview) || isSending}
         >
-          <Send size={22} />
+          {isSending ? (
+            <div className="loading loading-spinner loading-xs"></div>
+          ) : (
+            <Send size={22} />
+          )}
         </button>
       </form>
     </div>

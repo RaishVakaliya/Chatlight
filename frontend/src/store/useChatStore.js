@@ -246,6 +246,18 @@ export const useChatStore = create((set, get) => ({
         pinnedMessages: updatedPinnedMessages,
       });
     });
+
+    // Listen for message updates (image upload completion)
+    socket.on("messageUpdated", (updatedMessage) => {
+      const { messages } = get();
+      
+      // Update the message in current messages
+      const updatedMessages = messages.map((msg) =>
+        msg._id === updatedMessage._id ? updatedMessage : msg
+      );
+      
+      set({ messages: updatedMessages });
+    });
   },
 
   unsubscribeFromMessages: () => {
@@ -254,6 +266,7 @@ export const useChatStore = create((set, get) => ({
     socket.off("messagesRead");
     socket.off("messagePinned");
     socket.off("messageUnpinned");
+    socket.off("messageUpdated");
   },
 
   searchUsers: async (query) => {
