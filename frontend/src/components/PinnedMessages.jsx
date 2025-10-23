@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Pin, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
@@ -6,6 +6,7 @@ import { formatMessageTime } from "../lib/utils";
 
 const PinnedMessages = ({ selectedUser }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const pinnedMessagesRef = useRef(null);
   const {
     pinnedMessages,
     getPinnedMessages,
@@ -19,6 +20,23 @@ const PinnedMessages = ({ selectedUser }) => {
       getPinnedMessages(selectedUser._id);
     }
   }, [selectedUser?._id, getPinnedMessages]);
+
+  // Handle outside click to close expanded pinned messages
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (pinnedMessagesRef.current && !pinnedMessagesRef.current.contains(event.target)) {
+        setIsExpanded(false);
+      }
+    };
+
+    if (isExpanded) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {``
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isExpanded]);
 
   if (!pinnedMessages.length && !isPinnedMessagesLoading) {
     return null;
@@ -47,7 +65,7 @@ const PinnedMessages = ({ selectedUser }) => {
   };
 
   return (
-    <div className="bg-base-200 border-b border-base-300">
+    <div ref={pinnedMessagesRef} className="bg-base-200 border-b border-base-300">
       {/* Header */}
       <div
         className="flex items-center justify-between p-3 cursor-pointer hover:bg-base-300 transition-colors"

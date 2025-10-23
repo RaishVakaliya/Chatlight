@@ -32,12 +32,14 @@ export const getUsersForSidebar = async (req, res) => {
           ...user._doc,
           unreadCount,
           lastMessageTime: lastMessage ? lastMessage.createdAt : user.createdAt,
-          lastMessage: lastMessage ? {
-            text: lastMessage.text,
-            image: lastMessage.image,
-            senderId: lastMessage.senderId,
-            createdAt: lastMessage.createdAt
-          } : null,
+          lastMessage: lastMessage
+            ? {
+                text: lastMessage.text,
+                image: lastMessage.image,
+                senderId: lastMessage.senderId,
+                createdAt: lastMessage.createdAt,
+              }
+            : null,
         };
       })
     );
@@ -65,12 +67,12 @@ export const getMessages = async (req, res) => {
         { senderId: userToChatId, receiverId: myId },
       ],
     }).populate({
-      path: 'replyTo',
-      select: 'text image senderId createdAt',
+      path: "replyTo",
+      select: "text image senderId createdAt",
       populate: {
-        path: 'senderId',
-        select: 'fullName profilePic'
-      }
+        path: "senderId",
+        select: "fullName profilePic",
+      },
     });
 
     // Mark messages sent to current user as read
@@ -97,7 +99,7 @@ export const getMessages = async (req, res) => {
       if (senderSocketId) {
         io.to(senderSocketId).emit("messagesRead", {
           receiverId: myId,
-          messageIds: unreadMessages.map(msg => msg._id),
+          messageIds: unreadMessages.map((msg) => msg._id),
         });
       }
     }
@@ -145,19 +147,19 @@ export const sendMessage = async (req, res) => {
 
     // Populate the replyTo field for the response
     await newMessage.populate({
-      path: 'replyTo',
-      select: 'text image senderId createdAt',
+      path: "replyTo",
+      select: "text image senderId createdAt",
       populate: {
-        path: 'senderId',
-        select: 'fullName profilePic'
-      }
+        path: "senderId",
+        select: "fullName profilePic",
+      },
     });
 
     // Send immediate response with temporary image
     const responseMessage = {
       ...newMessage.toObject(),
       image: image || null, // Send original base64 for immediate display
-      isUploading: !!image // Flag to indicate upload in progress
+      isUploading: !!image, // Flag to indicate upload in progress
     };
 
     // Emit to receiver immediately
@@ -175,58 +177,55 @@ export const sendMessage = async (req, res) => {
         const uploadResponse = await cloudinary.uploader.upload(image, {
           resource_type: "auto",
           quality: "auto:good",
-          fetch_format: "auto"
+          fetch_format: "auto",
         });
-        
+
         // Update message with actual image URL
         const updatedMessage = await Message.findByIdAndUpdate(
           newMessage._id,
           { image: uploadResponse.secure_url },
           { new: true }
         ).populate({
-          path: 'replyTo',
-          select: 'text image senderId createdAt',
+          path: "replyTo",
+          select: "text image senderId createdAt",
           populate: {
-            path: 'senderId',
-            select: 'fullName profilePic'
-          }
+            path: "senderId",
+            select: "fullName profilePic",
+          },
         });
 
         // Emit update to both users
         const finalMessage = {
           ...updatedMessage.toObject(),
-          isUploading: false
+          isUploading: false,
         };
 
         if (receiverSocketId) {
           io.to(receiverSocketId).emit("messageUpdated", finalMessage);
         }
-        
+
         const senderSocketId = getReceiverSocketId(senderId);
         if (senderSocketId) {
           io.to(senderSocketId).emit("messageUpdated", finalMessage);
         }
       } catch (uploadError) {
         console.error("Error uploading image:", uploadError);
-        
+
         // Update message to indicate upload failure
-        await Message.findByIdAndUpdate(
-          newMessage._id,
-          { image: null }
-        );
+        await Message.findByIdAndUpdate(newMessage._id, { image: null });
 
         // Emit failure to both users
         const failedMessage = {
           ...newMessage.toObject(),
           image: null,
           isUploading: false,
-          uploadFailed: true
+          uploadFailed: true,
         };
 
         if (receiverSocketId) {
           io.to(receiverSocketId).emit("messageUpdated", failedMessage);
         }
-        
+
         const senderSocketId = getReceiverSocketId(senderId);
         if (senderSocketId) {
           io.to(senderSocketId).emit("messageUpdated", failedMessage);
@@ -269,7 +268,7 @@ export const markMessagesAsRead = async (req, res) => {
       if (senderSocketId) {
         io.to(senderSocketId).emit("messagesRead", {
           receiverId: receiverId,
-          messageIds: unreadMessages.map(msg => msg._id),
+          messageIds: unreadMessages.map((msg) => msg._id),
         });
       }
     }
@@ -348,12 +347,14 @@ export const pinMessage = async (req, res) => {
     }
 
     // Check if user is part of this conversation
-    const isParticipant = 
-      message.senderId.toString() === userId.toString() || 
+    const isParticipant =
+      message.senderId.toString() === userId.toString() ||
       message.receiverId.toString() === userId.toString();
 
     if (!isParticipant) {
-      return res.status(403).json({ message: "Not authorized to pin this message" });
+      return res
+        .status(403)
+        .json({ message: "Not authorized to pin this message" });
     }
 
     // Update message to pinned
@@ -368,10 +369,11 @@ export const pinMessage = async (req, res) => {
     );
 
     // Emit socket event to both users
-    const otherUserId = message.senderId.toString() === userId.toString() 
-      ? message.receiverId 
-      : message.senderId;
-    
+    const otherUserId =
+      message.senderId.toString() === userId.toString()
+        ? message.receiverId
+        : message.senderId;
+
     const receiverSocketId = getReceiverSocketId(otherUserId);
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("messagePinned", updatedMessage);
@@ -396,12 +398,14 @@ export const unpinMessage = async (req, res) => {
     }
 
     // Check if user is part of this conversation
-    const isParticipant = 
-      message.senderId.toString() === userId.toString() || 
+    const isParticipant =
+      message.senderId.toString() === userId.toString() ||
       message.receiverId.toString() === userId.toString();
 
     if (!isParticipant) {
-      return res.status(403).json({ message: "Not authorized to unpin this message" });
+      return res
+        .status(403)
+        .json({ message: "Not authorized to unpin this message" });
     }
 
     // Update message to unpinned
@@ -416,10 +420,11 @@ export const unpinMessage = async (req, res) => {
     );
 
     // Emit socket event to both users
-    const otherUserId = message.senderId.toString() === userId.toString() 
-      ? message.receiverId 
-      : message.senderId;
-    
+    const otherUserId =
+      message.senderId.toString() === userId.toString()
+        ? message.receiverId
+        : message.senderId;
+
     const receiverSocketId = getReceiverSocketId(otherUserId);
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("messageUnpinned", updatedMessage);
@@ -465,7 +470,9 @@ export const deleteMessage = async (req, res) => {
 
     // Check if user is the sender of the message
     if (message.senderId.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "Not authorized to delete this message" });
+      return res
+        .status(403)
+        .json({ message: "Not authorized to delete this message" });
     }
 
     // Mark message as deleted instead of removing from database
@@ -479,12 +486,12 @@ export const deleteMessage = async (req, res) => {
       },
       { new: true }
     ).populate({
-      path: 'replyTo',
-      select: 'text image senderId createdAt',
+      path: "replyTo",
+      select: "text image senderId createdAt",
       populate: {
-        path: 'senderId',
-        select: 'fullName profilePic'
-      }
+        path: "senderId",
+        select: "fullName profilePic",
+      },
     });
 
     // Emit socket event to both users
