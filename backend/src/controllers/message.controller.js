@@ -244,6 +244,13 @@ export const markMessagesAsRead = async (req, res) => {
     const { senderId } = req.params;
     const receiverId = req.user._id;
 
+    // Get unread messages before marking them as read
+    const unreadMessages = await Message.find({
+      senderId: senderId,
+      receiverId: receiverId,
+      read: false,
+    });
+
     // Mark all messages from this sender as read
     await Message.updateMany(
       {
@@ -255,6 +262,17 @@ export const markMessagesAsRead = async (req, res) => {
         $set: { read: true },
       }
     );
+
+    // Notify the sender that their messages have been read
+    if (unreadMessages.length > 0) {
+      const senderSocketId = getReceiverSocketId(senderId);
+      if (senderSocketId) {
+        io.to(senderSocketId).emit("messagesRead", {
+          receiverId: receiverId,
+          messageIds: unreadMessages.map(msg => msg._id),
+        });
+      }
+    }
 
     res.status(200).json({ message: "Messages marked as read" });
   } catch (error) {
@@ -430,6 +448,61 @@ export const getPinnedMessages = async (req, res) => {
     res.status(200).json(pinnedMessages);
   } catch (error) {
     console.error("Error in getPinnedMessages Controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const deleteMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user._id;
+
+    // Find the message
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Check if user is the sender of the message
+    if (message.senderId.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Not authorized to delete this message" });
+    }
+
+    // Mark message as deleted instead of removing from database
+    const updatedMessage = await Message.findByIdAndUpdate(
+      messageId,
+      {
+        deleted: true,
+        deletedAt: new Date(),
+        text: null,
+        image: null,
+      },
+      { new: true }
+    ).populate({
+      path: 'replyTo',
+      select: 'text image senderId createdAt',
+      populate: {
+        path: 'senderId',
+        select: 'fullName profilePic'
+      }
+    });
+
+    // Emit socket event to both users
+    const otherUserId = message.receiverId;
+    const receiverSocketId = getReceiverSocketId(otherUserId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("messageDeleted", updatedMessage);
+    }
+
+    // Also emit to sender for other devices
+    const senderSocketId = getReceiverSocketId(userId);
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("messageDeleted", updatedMessage);
+    }
+
+    res.status(200).json(updatedMessage);
+  } catch (error) {
+    console.error("Error in deleteMessage Controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

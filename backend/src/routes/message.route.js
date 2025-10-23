@@ -10,6 +10,7 @@ import {
   pinMessage,
   unpinMessage,
   getPinnedMessages,
+  deleteMessage,
 } from "../controllers/message.controller.js";
 
 const router = express.Router();
@@ -23,5 +24,6 @@ router.post("/send/:id", protectRoute, sendMessage);
 router.put("/pin/:messageId", protectRoute, pinMessage);
 router.put("/unpin/:messageId", protectRoute, unpinMessage);
 router.put("/read/:senderId", protectRoute, markMessagesAsRead);
+router.delete("/delete/:messageId", protectRoute, deleteMessage);
 
 export default router;

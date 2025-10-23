@@ -131,9 +131,19 @@ export const useChatStore = create((set, get) => ({
         newMessage.senderId === selectedUser._id;
       if (!isMessageSentFromSelectedUser) return;
 
+      // Add message to current chat and mark as read immediately
+      const messageWithReadStatus = { ...newMessage, read: true };
       set({
-        messages: [...get().messages, newMessage],
+        messages: [...get().messages, messageWithReadStatus],
       });
+
+      // Automatically mark message as read in backend since chat is active
+      // This will trigger the backend to notify the sender
+      try {
+        axiosInstance.put(`/messages/read/${newMessage.senderId}`);
+      } catch (error) {
+        console.error("Failed to mark message as read:", error);
+      }
     });
 
     // Listen for new messages from other users to update unread counts and sort
@@ -258,6 +268,26 @@ export const useChatStore = create((set, get) => ({
       
       set({ messages: updatedMessages });
     });
+
+    // Listen for message deletion events
+    socket.on("messageDeleted", (deletedMessage) => {
+      const { messages, pinnedMessages } = get();
+      
+      // Update the message in current messages
+      const updatedMessages = messages.map((msg) =>
+        msg._id === deletedMessage._id ? deletedMessage : msg
+      );
+      
+      // Remove from pinned messages if it was pinned
+      const updatedPinnedMessages = pinnedMessages.filter(
+        (msg) => msg._id !== deletedMessage._id
+      );
+      
+      set({ 
+        messages: updatedMessages,
+        pinnedMessages: updatedPinnedMessages 
+      });
+    });
   },
 
   unsubscribeFromMessages: () => {
@@ -267,6 +297,7 @@ export const useChatStore = create((set, get) => ({
     socket.off("messagePinned");
     socket.off("messageUnpinned");
     socket.off("messageUpdated");
+    socket.off("messageDeleted");
   },
 
   searchUsers: async (query) => {
@@ -362,6 +393,30 @@ export const useChatStore = create((set, get) => ({
       toast.success("Message unpinned");
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to unpin message");
+    }
+  },
+
+  deleteMessage: async (messageId) => {
+    try {
+      const res = await axiosInstance.delete(`/messages/delete/${messageId}`);
+
+      // Update the message in current messages
+      const { messages } = get();
+      const updatedMessages = messages.map((msg) =>
+        msg._id === messageId ? res.data : msg
+      );
+      set({ messages: updatedMessages });
+
+      // Remove from pinned messages if it was pinned
+      const { pinnedMessages } = get();
+      const updatedPinnedMessages = pinnedMessages.filter(
+        (msg) => msg._id !== messageId
+      );
+      set({ pinnedMessages: updatedPinnedMessages });
+
+      toast.success("Message deleted");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete message");
     }
   },
 

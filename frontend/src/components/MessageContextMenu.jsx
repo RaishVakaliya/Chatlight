@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { Pin, PinOff, Copy, Reply, ChevronDown } from "lucide-react";
+import { Pin, PinOff, Copy, Reply, ChevronDown, Trash2 } from "lucide-react";
 import { useChatStore } from "../store/useChatStore";
 import toast from "react-hot-toast";
 
 const MessageContextMenu = ({ message, onClose, isOwnMessage, onReply }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
-  const { pinMessage, unpinMessage, setReplyingTo } = useChatStore();
+  const { pinMessage, unpinMessage, setReplyingTo, deleteMessage } = useChatStore();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -54,6 +54,14 @@ const MessageContextMenu = ({ message, onClose, isOwnMessage, onReply }) => {
     }
   };
 
+  const handleDelete = () => {
+    if (window.confirm("Are you sure you want to delete this message?")) {
+      deleteMessage(message._id);
+      setIsOpen(false);
+      onClose();
+    }
+  };
+
   return (
     <div className="relative" ref={menuRef}>
       <button
@@ -96,6 +104,16 @@ const MessageContextMenu = ({ message, onClose, isOwnMessage, onReply }) => {
           >
             <Reply className="w-4 h-4" />
           </button>
+
+          {isOwnMessage && (
+            <button
+              onClick={handleDelete}
+              className="px-2 py-2 sm:px-3 text-sm hover:bg-red-200 hover:rounded-full items-center gap-2 text-red-600 touch-manipulation"
+              title="Delete message"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       )}
     </div>

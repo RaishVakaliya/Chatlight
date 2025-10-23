@@ -1,6 +1,6 @@
 import { useChatStore } from "../store/useChatStore";
 import { useEffect, useRef, useState } from "react";
-import { Pin } from "lucide-react";
+import { Pin, Ban } from "lucide-react";
 
 import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
@@ -56,13 +56,18 @@ const ChatContainer = () => {
   const [activeContextMenu, setActiveContextMenu] = useState(null);
 
   const scrollToMessage = (messageId) => {
-    const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+    const messageElement = document.querySelector(
+      `[data-message-id="${messageId}"]`
+    );
     if (messageElement) {
       messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
       // Add highlight effect
       messageElement.classList.add("bg-yellow-100", "dark:bg-yellow-900/30");
       setTimeout(() => {
-        messageElement.classList.remove("bg-yellow-100", "dark:bg-yellow-900/30");
+        messageElement.classList.remove(
+          "bg-yellow-100",
+          "dark:bg-yellow-900/30"
+        );
       }, 2000);
     }
   };
@@ -205,54 +210,72 @@ const ChatContainer = () => {
                 </div>
               )}
 
-              {/* Context menu */}
-              <div className="absolute -top-2 -right-0">
-                <MessageContextMenu
-                  message={message}
-                  onClose={() => setActiveContextMenu(null)}
-                  isOwnMessage={message.senderId === authUser._id}
-                  onReply={() => {
-                    // Focus input field when reply is clicked
-                    setTimeout(() => {
-                      if (messageInputRef.current?.focus) {
-                        messageInputRef.current.focus();
-                      }
-                    }, 100);
-                  }}
-                />
-              </div>
+              {/* Context menu - only show for non-deleted messages */}
+              {!message.deleted && (
+                <div className="absolute -top-2 -right-0">
+                  <MessageContextMenu
+                    message={message}
+                    onClose={() => setActiveContextMenu(null)}
+                    isOwnMessage={message.senderId === authUser._id}
+                    onReply={() => {
+                      // Focus input field when reply is clicked
+                      setTimeout(() => {
+                        if (messageInputRef.current?.focus) {
+                          messageInputRef.current.focus();
+                        }
+                      }, 100);
+                    }}
+                  />
+                </div>
+              )}
 
               {/* Reply message display */}
-              {message.replyTo && (
-                <ReplyMessage 
-                  replyTo={message.replyTo} 
+              {message.replyTo && !message.deleted && (
+                <ReplyMessage
+                  replyTo={message.replyTo}
                   onClick={() => scrollToMessage(message.replyTo._id)}
                 />
               )}
 
-              {message.image && (
-                <div className="relative">
-                  <img
-                    src={message.image}
-                    alt="Attachment"
-                    className={`max-w-full w-auto max-h-80 sm:max-w-md md:max-w-lg rounded-md mb-2 cursor-pointer hover:opacity-90 transition-opacity object-contain ${
-                      message.isUploading ? "opacity-60" : ""
-                    }`}
-                    onClick={() => !message.isUploading && setSelectedImage(message.image)}
-                  />
-                  {message.isUploading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-md">
-                      <div className="loading loading-spinner loading-md text-white"></div>
-                    </div>
-                  )}
-                  {message.uploadFailed && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-red-500/20 rounded-md">
-                      <span className="text-red-500 text-sm font-medium">Upload failed</span>
-                    </div>
-                  )}
+              {/* Deleted message placeholder */}
+              {message.deleted ? (
+                <div className="flex gap-2 italic">
+                  <span className="text-sm flex items-center">
+                    <Ban /> This message was deleted
+                  </span>
                 </div>
+              ) : (
+                <>
+                  {message.image && (
+                    <div className="relative">
+                      <img
+                        src={message.image}
+                        alt="Attachment"
+                        className={`max-w-full w-auto max-h-80 sm:max-w-md md:max-w-lg rounded-md mb-2 cursor-pointer hover:opacity-90 transition-opacity object-contain ${
+                          message.isUploading ? "opacity-60" : ""
+                        }`}
+                        onClick={() =>
+                          !message.isUploading &&
+                          setSelectedImage(message.image)
+                        }
+                      />
+                      {message.isUploading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-md">
+                          <div className="loading loading-spinner loading-md text-white"></div>
+                        </div>
+                      )}
+                      {message.uploadFailed && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-red-500/20 rounded-md">
+                          <span className="text-red-500 text-sm font-medium">
+                            Upload failed
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {message.text && <p>{message.text}</p>}
+                </>
               )}
-              {message.text && <p>{message.text}</p>}
 
               {/* Read status indicator for sent messages */}
               {message.senderId === authUser._id && (
