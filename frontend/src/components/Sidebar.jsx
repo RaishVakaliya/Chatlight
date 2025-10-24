@@ -6,7 +6,7 @@ import UserItem from "./UserItem";
 import { Users } from "lucide-react";
 
 const Sidebar = () => {
-  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } =
+  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading, subscribeToGlobalEvents, unsubscribeFromGlobalEvents } =
     useChatStore();
 
   const { onlineUsers } = useAuthStore();
@@ -20,6 +20,14 @@ const Sidebar = () => {
       setHasInitialLoad(true);
     }
   }, [getUsers, hasInitialLoad, users.length]);
+
+  // Subscribe to global events like profile updates
+  useEffect(() => {
+    subscribeToGlobalEvents();
+    return () => {
+      unsubscribeFromGlobalEvents();
+    };
+  }, [subscribeToGlobalEvents, unsubscribeFromGlobalEvents]);
 
   // Memoize filtered users to prevent unnecessary recalculations
   const filteredUsers = useMemo(() => {

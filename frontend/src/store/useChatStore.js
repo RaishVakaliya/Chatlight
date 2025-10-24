@@ -321,6 +321,48 @@ export const useChatStore = create((set, get) => ({
     });
   },
 
+  subscribeToGlobalEvents: () => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    // Listen for profile updates from any user
+    socket.on("profileUpdated", (profileData) => {
+      const { users, selectedUser } = get();
+      
+      // Update users list in sidebar
+      const updatedUsers = users.map(user => 
+        user._id === profileData.userId 
+          ? { 
+              ...user, 
+              profilePic: profileData.profilePic,
+              description: profileData.description 
+            }
+          : user
+      );
+      
+      // Update selected user if it's the one that got updated (for chat header and contact info)
+      const updatedSelectedUser = selectedUser && selectedUser._id === profileData.userId
+        ? {
+            ...selectedUser,
+            profilePic: profileData.profilePic,
+            description: profileData.description
+          }
+        : selectedUser;
+      
+      set({ 
+        users: updatedUsers,
+        selectedUser: updatedSelectedUser
+      });
+    });
+  },
+
+  unsubscribeFromGlobalEvents: () => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+    
+    socket.off("profileUpdated");
+  },
+
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     socket.off("newMessage");

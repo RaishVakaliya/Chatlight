@@ -2,6 +2,7 @@ import { generateToken } from "../lib/utils.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import cloudinary from "../lib/cloudinary.js";
+import { io } from "../lib/socket.js";
 
 export const signup = async (req, res) => {
   const { fullName, email, password } = req.body;
@@ -109,6 +110,16 @@ export const updateProfile = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
       new: true,
     });
+
+    // Emit socket event to all connected users about profile update
+    if (updateData.profilePic || updateData.description !== undefined) {
+      io.emit("profileUpdated", {
+        userId: userId,
+        profilePic: updatedUser.profilePic,
+        fullName: updatedUser.fullName,
+        description: updatedUser.description
+      });
+    }
 
     res.status(200).json(updatedUser);
   } catch (error) {
