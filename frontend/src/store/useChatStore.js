@@ -319,6 +319,18 @@ export const useChatStore = create((set, get) => ({
         users: updatedUsers
       });
     });
+
+    // Listen for message edit events
+    socket.on("messageEdited", (editedMessage) => {
+      const { messages } = get();
+      
+      // Update the message in current messages
+      const updatedMessages = messages.map((msg) =>
+        msg._id === editedMessage._id ? editedMessage : msg
+      );
+      
+      set({ messages: updatedMessages });
+    });
   },
 
   subscribeToGlobalEvents: () => {
@@ -370,6 +382,7 @@ export const useChatStore = create((set, get) => ({
     socket.off("messagePinned");
     socket.off("messageUnpinned");
     socket.off("messageUpdated");
+    socket.off("messageEdited");
     socket.off("messageDeleted");
   },
 
@@ -466,6 +479,25 @@ export const useChatStore = create((set, get) => ({
       toast.success("Message unpinned");
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to unpin message");
+    }
+  },
+
+  editMessage: async (messageId, newText) => {
+    try {
+      const res = await axiosInstance.put(`/messages/edit/${messageId}`, {
+        text: newText
+      });
+
+      // Update the message in current messages
+      const { messages } = get();
+      const updatedMessages = messages.map((msg) =>
+        msg._id === messageId ? res.data : msg
+      );
+      set({ messages: updatedMessages });
+
+      toast.success("Message edited");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to edit message");
     }
   },
 

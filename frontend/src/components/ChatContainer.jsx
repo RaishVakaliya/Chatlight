@@ -46,6 +46,7 @@ const ChatContainer = () => {
     selectedUser,
     subscribeToMessages,
     unsubscribeFromMessages,
+    editMessage,
   } = useChatStore();
   const { authUser } = useAuthStore();
   const { selectedBackground } = useBackgroundStore();
@@ -54,6 +55,8 @@ const ChatContainer = () => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [activeContextMenu, setActiveContextMenu] = useState(null);
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [editingText, setEditingText] = useState("");
 
   const scrollToMessage = (messageId) => {
     const messageElement = document.querySelector(
@@ -99,6 +102,38 @@ const ChatContainer = () => {
     subscribeToMessages,
     unsubscribeFromMessages,
   ]);
+
+  // Close profile modal when selected user changes
+  useEffect(() => {
+    setIsProfileModalOpen(false);
+  }, [selectedUser._id]);
+
+  const handleEditMessage = (message) => {
+    setEditingMessageId(message._id);
+    setEditingText(message.text);
+  };
+
+  const handleSaveEdit = async () => {
+    if (editingText.trim() === "") return;
+
+    await editMessage(editingMessageId, editingText.trim());
+    setEditingMessageId(null);
+    setEditingText("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMessageId(null);
+    setEditingText("");
+  };
+
+  const handleEditKeyPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSaveEdit();
+    } else if (e.key === "Escape") {
+      handleCancelEdit();
+    }
+  };
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -225,6 +260,7 @@ const ChatContainer = () => {
                         }
                       }, 100);
                     }}
+                    onEdit={handleEditMessage}
                   />
                 </div>
               )}
@@ -273,7 +309,45 @@ const ChatContainer = () => {
                       )}
                     </div>
                   )}
-                  {message.text && <p>{message.text}</p>}
+                  {message.text && (
+                    <div>
+                      {editingMessageId === message._id ? (
+                        <div className="space-y-2">
+                          <textarea
+                            value={editingText}
+                            onChange={(e) => setEditingText(e.target.value)}
+                            onKeyDown={handleEditKeyPress}
+                            className="w-full p-2 border border-base-300 rounded-md bg-base-100 text-base-content resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                            rows="2"
+                            autoFocus
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <button
+                              onClick={handleCancelEdit}
+                              className="px-3 py-1 text-xs bg-primary hover:bg-primary/90 text-primary-content rounded-md transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={handleSaveEdit}
+                              className="px-3 py-1 text-xs bg-secondary text-primary-content rounded-md transition-colors"
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-end gap-2">
+                          <p className="flex-1">{message.text}</p>
+                          {message.edited && (
+                            <span className="text-xs text-base-content/50 italic whitespace-nowrap">
+                              edited
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
 

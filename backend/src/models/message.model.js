@@ -44,6 +44,13 @@ const messageSchema = new mongoose.Schema(
     deletedAt: {
       type: Date,
     },
+    edited: {
+      type: Boolean,
+      default: false,
+    },
+    editedAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

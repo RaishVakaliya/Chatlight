@@ -453,8 +453,74 @@ export const getPinnedMessages = async (req, res) => {
 
     res.status(200).json(pinnedMessages);
   } catch (error) {
-    console.error("Error in getPinnedMessages Controller", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.log("Error in getPinnedMessages controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const editMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { text } = req.body;
+    const userId = req.user._id;
+
+    if (!text || text.trim() === "") {
+      return res.status(400).json({ message: "Message text is required" });
+    }
+
+    // Find the message
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Check if user is the sender of the message
+    if (message.senderId.toString() !== userId.toString()) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to edit this message" });
+    }
+
+    // Check if message is deleted
+    if (message.deleted) {
+      return res.status(400).json({ message: "Cannot edit deleted message" });
+    }
+
+    // Update message with new text and mark as edited
+    const updatedMessage = await Message.findByIdAndUpdate(
+      messageId,
+      {
+        $set: {
+          text: text.trim(),
+          edited: true,
+          editedAt: new Date(),
+        },
+      },
+      { new: true }
+    ).populate({
+      path: "replyTo",
+      select: "text image senderId createdAt",
+      populate: {
+        path: "senderId",
+        select: "fullName profilePic",
+      },
+    });
+
+    // Emit socket event to both users
+    const receiverSocketId = getReceiverSocketId(message.receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("messageEdited", updatedMessage);
+    }
+
+    const senderSocketId = getReceiverSocketId(message.senderId);
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("messageEdited", updatedMessage);
+    }
+
+    res.status(200).json(updatedMessage);
+  } catch (error) {
+    console.log("Error in editMessage controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -480,10 +546,12 @@ export const deleteMessage = async (req, res) => {
     const updatedMessage = await Message.findByIdAndUpdate(
       messageId,
       {
-        deleted: true,
-        deletedAt: new Date(),
-        text: null,
-        image: null,
+        $set: {
+          deleted: true,
+          deletedAt: new Date(),
+          text: null,
+          image: null,
+        },
       },
       { new: true }
     ).populate({
@@ -496,21 +564,19 @@ export const deleteMessage = async (req, res) => {
     });
 
     // Emit socket event to both users
-    const otherUserId = message.receiverId;
-    const receiverSocketId = getReceiverSocketId(otherUserId);
+    const receiverSocketId = getReceiverSocketId(message.receiverId);
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("messageDeleted", updatedMessage);
     }
 
-    // Also emit to sender for other devices
-    const senderSocketId = getReceiverSocketId(userId);
+    const senderSocketId = getReceiverSocketId(message.senderId);
     if (senderSocketId) {
       io.to(senderSocketId).emit("messageDeleted", updatedMessage);
     }
 
     res.status(200).json(updatedMessage);
   } catch (error) {
-    console.error("Error in deleteMessage Controller", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.log("Error in deleteMessage controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
   }
 };

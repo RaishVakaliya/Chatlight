@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { Pin, PinOff, Copy, Reply, ChevronDown, Trash2 } from "lucide-react";
+import { Pin, PinOff, Copy, Reply, ChevronDown, Trash2, Pencil } from "lucide-react";
 import { useChatStore } from "../store/useChatStore";
 import toast from "react-hot-toast";
 
-const MessageContextMenu = ({ message, onClose, isOwnMessage, onReply }) => {
+const MessageContextMenu = ({ message, onClose, isOwnMessage, onReply, onEdit }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const { pinMessage, unpinMessage, setReplyingTo, deleteMessage } = useChatStore();
@@ -52,6 +52,14 @@ const MessageContextMenu = ({ message, onClose, isOwnMessage, onReply }) => {
     if (onReply) {
       onReply();
     }
+  };
+
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit(message);
+    }
+    setIsOpen(false);
+    onClose();
   };
 
   const handleDelete = () => {
@@ -104,6 +112,16 @@ const MessageContextMenu = ({ message, onClose, isOwnMessage, onReply }) => {
           >
             <Reply className="w-4 h-4" />
           </button>
+
+          {isOwnMessage && message.text && !message.deleted && (
+            <button
+              onClick={handleEdit}
+              className="px-2 py-2 sm:px-3 text-sm hover:bg-base-200 hover:rounded-full items-center gap-2 text-base-content touch-manipulation"
+              title="Edit message"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+          )}
 
           {isOwnMessage && (
             <button

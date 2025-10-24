@@ -24,15 +24,15 @@ const MessageInput = forwardRef((props, ref) => {
           );
         }
       });
-    }
+    },
   }));
 
   const compressImage = (file, maxWidth = 1024, quality = 0.8) => {
     return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
       const img = new window.Image(); // Use window.Image to avoid conflict with lucide-react Image
-      
+
       img.onload = () => {
         // Calculate new dimensions
         let { width, height } = img;
@@ -40,23 +40,23 @@ const MessageInput = forwardRef((props, ref) => {
           height = (height * maxWidth) / width;
           width = maxWidth;
         }
-        
+
         canvas.width = width;
         canvas.height = height;
-        
+
         // Draw and compress
         ctx.drawImage(img, 0, 0, width, height);
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        const compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
         resolve(compressedDataUrl);
       };
-      
+
       img.onerror = () => {
         // Fallback: return original file as base64 if compression fails
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result);
         reader.readAsDataURL(file);
       };
-      
+
       img.src = URL.createObjectURL(file);
     });
   };
@@ -70,7 +70,7 @@ const MessageInput = forwardRef((props, ref) => {
 
     // Show loading state
     toast.loading("Processing image...", { id: "image-processing" });
-    
+
     try {
       // Compress image before setting preview
       const compressedImage = await compressImage(file);
@@ -94,7 +94,7 @@ const MessageInput = forwardRef((props, ref) => {
     if (isSending) return; // Prevent double sending
 
     setIsSending(true);
-    
+
     // Store current values before clearing
     const messageData = {
       text: text.trim(),
@@ -110,7 +110,7 @@ const MessageInput = forwardRef((props, ref) => {
 
     try {
       await sendMessage(messageData);
-      
+
       // Keep focus on input after sending message
       setTimeout(() => {
         textInputRef.current?.focus();
@@ -150,6 +150,14 @@ const MessageInput = forwardRef((props, ref) => {
 
       <form onSubmit={handleSendMessage} className="flex items-center gap-2">
         <div className="flex-1 flex gap-2">
+          <button
+            type="button"
+            className={`hidden sm:flex btn btn-circle
+                     ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Image size={20} />
+          </button>
           <input
             ref={textInputRef}
             type="text"
@@ -165,15 +173,6 @@ const MessageInput = forwardRef((props, ref) => {
             ref={fileInputRef}
             onChange={handleImageChange}
           />
-
-          <button
-            type="button"
-            className={`hidden sm:flex btn btn-circle
-                     ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Image size={20} />
-          </button>
         </div>
         <button
           type="submit"
