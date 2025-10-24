@@ -9,6 +9,7 @@ import UserProfileModal from "./UserProfileModal";
 import ImagePreviewModal from "./ImagePreviewModal";
 import PinnedMessages from "./PinnedMessages";
 import MessageContextMenu from "./MessageContextMenu";
+import DeleteMessageModal from "./DeleteMessageModal";
 import ReplyPreview from "./ReplyPreview";
 import ReplyMessage from "./ReplyMessage";
 import { useAuthStore } from "../store/useAuthStore";
@@ -47,6 +48,7 @@ const ChatContainer = () => {
     subscribeToMessages,
     unsubscribeFromMessages,
     editMessage,
+    deleteMessage,
   } = useChatStore();
   const { authUser } = useAuthStore();
   const { selectedBackground } = useBackgroundStore();
@@ -57,6 +59,9 @@ const ChatContainer = () => {
   const [activeContextMenu, setActiveContextMenu] = useState(null);
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editingText, setEditingText] = useState("");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const scrollToMessage = (messageId) => {
     const messageElement = document.querySelector(
@@ -108,9 +113,42 @@ const ChatContainer = () => {
     setIsProfileModalOpen(false);
   }, [selectedUser._id]);
 
+  // Close delete modal when selected user changes
+  useEffect(() => {
+    setIsDeleteModalOpen(false);
+    setMessageToDelete(null);
+    setIsDeleting(false);
+  }, [selectedUser._id]);
+
   const handleEditMessage = (message) => {
     setEditingMessageId(message._id);
     setEditingText(message.text);
+  };
+
+  const handleDeleteMessage = (message) => {
+    setMessageToDelete(message);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!messageToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteMessage(messageToDelete._id);
+      setIsDeleteModalOpen(false);
+      setMessageToDelete(null);
+    } catch (error) {
+      // Error is handled in the store with toast
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setMessageToDelete(null);
+    setIsDeleting(false);
   };
 
   const handleSaveEdit = async () => {
@@ -261,6 +299,7 @@ const ChatContainer = () => {
                       }, 100);
                     }}
                     onEdit={handleEditMessage}
+                    onDelete={handleDeleteMessage}
                   />
                 </div>
               )}
@@ -377,6 +416,14 @@ const ChatContainer = () => {
         onClose={() => setSelectedImage(null)}
         imageUrl={selectedImage}
         imageAlt="Chat Image"
+      />
+
+      {/* Delete Message Modal */}
+      <DeleteMessageModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
       />
     </div>
   );

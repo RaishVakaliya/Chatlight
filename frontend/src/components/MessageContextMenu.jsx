@@ -3,7 +3,7 @@ import { Pin, PinOff, Copy, Reply, ChevronDown, Trash2, Pencil } from "lucide-re
 import { useChatStore } from "../store/useChatStore";
 import toast from "react-hot-toast";
 
-const MessageContextMenu = ({ message, onClose, isOwnMessage, onReply, onEdit }) => {
+const MessageContextMenu = ({ message, onClose, isOwnMessage, onReply, onEdit, onDelete }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const { pinMessage, unpinMessage, setReplyingTo, deleteMessage } = useChatStore();
@@ -63,11 +63,11 @@ const MessageContextMenu = ({ message, onClose, isOwnMessage, onReply, onEdit })
   };
 
   const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this message?")) {
-      deleteMessage(message._id);
-      setIsOpen(false);
-      onClose();
+    if (onDelete) {
+      onDelete(message);
     }
+    setIsOpen(false);
+    onClose();
   };
 
   return (
