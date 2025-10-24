@@ -78,7 +78,9 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
             
             <div className="flex justify-between items-center py-2">
               <span className="text-sm text-base-content/70">Account Status</span>
-              <span className="text-sm font-medium text-green-500">Active</span>
+              <span className={`text-sm font-medium ${user.deleted ? "text-red-500" : "text-green-500"}`}>
+                {user.deleted ? "Deleted" : "Active"}
+              </span>
             </div>
           </div>
         </div>

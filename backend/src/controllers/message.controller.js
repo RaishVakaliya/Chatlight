@@ -8,10 +8,32 @@ export const getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
 
-    // Get all users except current user (including deleted ones)
-    const filteredUsers = await User.find({
+    // Get all active users
+    const activeUsers = await User.find({
       _id: { $ne: loggedInUserId },
+      deleted: { $ne: true },
     }).select("-password");
+
+    // Get deleted users who have chat history with current user
+    const usersWithChatHistory = await Message.distinct("senderId", {
+      receiverId: loggedInUserId,
+    });
+    const usersWithChatHistory2 = await Message.distinct("receiverId", {
+      senderId: loggedInUserId,
+    });
+    
+    // Combine both arrays and remove current user
+    const chatPartnerIds = [...new Set([...usersWithChatHistory, ...usersWithChatHistory2])]
+      .filter(id => id.toString() !== loggedInUserId.toString());
+
+    // Get deleted users who have chat history
+    const deletedUsersWithHistory = await User.find({
+      _id: { $in: chatPartnerIds },
+      deleted: true,
+    }).select("-password");
+
+    // Combine active users and deleted users with chat history
+    const filteredUsers = [...activeUsers, ...deletedUsersWithHistory];
 
     // Get unread message counts and last message time for each user
     const usersWithUnreadCounts = await Promise.all(
