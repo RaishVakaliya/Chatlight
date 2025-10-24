@@ -15,6 +15,11 @@ export function truncateText(text, maxLength = 30) {
 export function formatLastMessage(lastMessage, currentUserId) {
   if (!lastMessage) return "No messages yet";
   
+  // If the message is deleted
+  if (lastMessage.deleted) {
+    return "Message was deleted";
+  }
+  
   // If it's an image message
   if (lastMessage.image && !lastMessage.text) {
     const sender = lastMessage.senderId === currentUserId ? "You" : "";

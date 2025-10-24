@@ -102,7 +102,8 @@ export const useChatStore = create((set, get) => ({
               text: res.data.text,
               image: res.data.image,
               senderId: res.data.senderId,
-              createdAt: res.data.createdAt
+              createdAt: res.data.createdAt,
+              deleted: res.data.deleted
             }
           };
         }
@@ -173,7 +174,8 @@ export const useChatStore = create((set, get) => ({
                   text: newMessage.text,
                   image: newMessage.image,
                   senderId: newMessage.senderId,
-                  createdAt: newMessage.createdAt
+                  createdAt: newMessage.createdAt,
+                  deleted: newMessage.deleted
                 }
               };
             }
@@ -271,7 +273,7 @@ export const useChatStore = create((set, get) => ({
 
     // Listen for message deletion events
     socket.on("messageDeleted", (deletedMessage) => {
-      const { messages, pinnedMessages } = get();
+      const { messages, pinnedMessages, users } = get();
       
       // Update the message in current messages
       const updatedMessages = messages.map((msg) =>
@@ -283,9 +285,38 @@ export const useChatStore = create((set, get) => ({
         (msg) => msg._id !== deletedMessage._id
       );
       
+      // Update sidebar if this was the last message
+      const currentUserId = useAuthStore.getState().authUser._id;
+      const updatedUsers = users.map((user) => {
+        // Check if this deleted message was the last message for this conversation
+        // The deleted message could be from current user to this user, or from this user to current user
+        const isLastMessageMatch = user.lastMessage && (
+          (user.lastMessage.senderId === deletedMessage.senderId && 
+           user.lastMessage.createdAt === deletedMessage.createdAt) ||
+          // Additional check: if the conversation involves this user and the deleted message
+          ((deletedMessage.senderId === currentUserId && deletedMessage.receiverId === user._id) ||
+           (deletedMessage.senderId === user._id && deletedMessage.receiverId === currentUserId)) &&
+          user.lastMessage.createdAt === deletedMessage.createdAt
+        );
+        
+        if (isLastMessageMatch) {
+          return {
+            ...user,
+            lastMessage: {
+              ...user.lastMessage,
+              deleted: true,
+              text: null,
+              image: null
+            }
+          };
+        }
+        return user;
+      });
+      
       set({ 
         messages: updatedMessages,
-        pinnedMessages: updatedPinnedMessages 
+        pinnedMessages: updatedPinnedMessages,
+        users: updatedUsers
       });
     });
   },
@@ -401,18 +432,41 @@ export const useChatStore = create((set, get) => ({
       const res = await axiosInstance.delete(`/messages/delete/${messageId}`);
 
       // Update the message in current messages
-      const { messages } = get();
+      const { messages, users, selectedUser } = get();
       const updatedMessages = messages.map((msg) =>
         msg._id === messageId ? res.data : msg
       );
-      set({ messages: updatedMessages });
 
       // Remove from pinned messages if it was pinned
       const { pinnedMessages } = get();
       const updatedPinnedMessages = pinnedMessages.filter(
         (msg) => msg._id !== messageId
       );
-      set({ pinnedMessages: updatedPinnedMessages });
+
+      // Update sidebar if this was the last message
+      const currentUserId = useAuthStore.getState().authUser._id;
+      const updatedUsers = users.map((user) => {
+        // Check if this deleted message was the last message for this conversation
+        if (selectedUser && user._id === selectedUser._id && user.lastMessage && 
+            user.lastMessage.createdAt === res.data.createdAt) {
+          return {
+            ...user,
+            lastMessage: {
+              ...user.lastMessage,
+              deleted: true,
+              text: null,
+              image: null
+            }
+          };
+        }
+        return user;
+      });
+
+      set({ 
+        messages: updatedMessages, 
+        pinnedMessages: updatedPinnedMessages,
+        users: updatedUsers
+      });
 
       toast.success("Message deleted");
     } catch (error) {
