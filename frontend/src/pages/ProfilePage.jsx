@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
-import { Camera, Mail, User, FileText, Save } from "lucide-react";
+import { Camera, Mail, User, FileText, Save, Trash2 } from "lucide-react";
+import DeleteAccountModal from "../components/DeleteAccountModal";
 
 const ProfilePage = () => {
   const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
   const [selectedImg, setSelectedImg] = useState(null);
   const [description, setDescription] = useState(authUser?.description || "");
   const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -164,7 +166,35 @@ const ProfilePage = () => {
               </div>
             </div>
           </div>
+
+          {/* Danger Zone */}
+          <div className="mt-8 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6">
+            <h2 className="text-lg font-medium text-red-800 dark:text-red-200 mb-4">Danger Zone</h2>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between py-3 border-b border-red-200 dark:border-red-800">
+                <div>
+                  <h3 className="font-medium text-red-800 dark:text-red-200">Delete Account</h3>
+                  <p className="text-sm text-red-600 dark:text-red-300 mt-1">
+                    Permanently delete your account and remove your profile data. Your messages will remain visible to other users.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Account
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Delete Account Modal */}
+        <DeleteAccountModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+        />
       </div>
     </div>
   );

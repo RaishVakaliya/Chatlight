@@ -117,7 +117,7 @@ export const updateProfile = async (req, res) => {
         userId: userId,
         profilePic: updatedUser.profilePic,
         fullName: updatedUser.fullName,
-        description: updatedUser.description
+        description: updatedUser.description,
       });
     }
 
@@ -125,6 +125,43 @@ export const updateProfile = async (req, res) => {
   } catch (error) {
     console.log("error in update profile:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const deleteAccount = async (req, res) => {
+  try {
+    const { confirmationText } = req.body;
+    const userId = req.user._id;
+    const user = req.user;
+
+    // Validate confirmation text (should be "FullName Delete")
+    const expectedText = `${user.fullName} Delete`;
+    if (confirmationText !== expectedText) {
+      return res.status(400).json({
+        message: `Please type "${expectedText}" to confirm account deletion`,
+      });
+    }
+
+    // Soft delete the user account (preserve messages)
+    await User.findByIdAndUpdate(userId, {
+      $set: {
+        deleted: true,
+        deletedAt: new Date(),
+        // Clear sensitive data but keep basic info for message history
+        email: `deleted_${userId}@deleted.com`,
+        password: null,
+        profilePic: "/avatar.png", // Default avatar
+        description: "",
+      },
+    });
+
+    // Clear the JWT cookie
+    res.cookie("jwt", "", { maxAge: 0 });
+
+    res.status(200).json({ message: "Account deleted successfully" });
+  } catch (error) {
+    console.log("Error in deleteAccount controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 

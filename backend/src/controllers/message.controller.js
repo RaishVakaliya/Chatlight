@@ -7,6 +7,8 @@ import { getReceiverSocketId, io } from "../lib/socket.js";
 export const getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
+
+    // Get all users except current user (including deleted ones)
     const filteredUsers = await User.find({
       _id: { $ne: loggedInUserId },
     }).select("-password");
@@ -28,8 +30,18 @@ export const getUsersForSidebar = async (req, res) => {
           ],
         }).sort({ createdAt: -1 });
 
+        // Modify user data for deleted users
+        const userData = user.deleted
+          ? {
+              ...user._doc,
+              fullName: "Chatlight User",
+              profilePic: "/avatar.png",
+              description: "",
+            }
+          : user._doc;
+
         return {
-          ...user._doc,
+          ...userData,
           unreadCount,
           lastMessageTime: lastMessage ? lastMessage.createdAt : user.createdAt,
           lastMessage: lastMessage
@@ -311,6 +323,7 @@ export const searchUsers = async (req, res) => {
     const users = await User.find({
       _id: { $ne: loggedInUserId },
       fullName: { $regex: query, $options: "i" },
+      deleted: { $ne: true },
     }).select("-password");
 
     // Get unread message counts for each user

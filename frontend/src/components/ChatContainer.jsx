@@ -337,7 +337,7 @@ const ChatContainer = () => {
                           </div>
                         </div>
                       ) : (
-                        <div className="flex items-end gap-2">
+                        <div className="flex items-end gap-2 whitespace-pre-wrap break-all break-words">
                           <p className="flex-1">{message.text}</p>
                           {message.edited && (
                             <span className="text-xs text-base-content/50 italic whitespace-nowrap">
