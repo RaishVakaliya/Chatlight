@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { Camera, Mail, User, FileText, Save, Trash2 } from "lucide-react";
 import DeleteAccountModal from "../components/DeleteAccountModal";
+import toast from "react-hot-toast";
 
 const ProfilePage = () => {
   const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
@@ -14,6 +15,15 @@ const ProfilePage = () => {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Check file size (10MB limit to match backend)
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > maxSize) {
+      toast.error("File size too large. Please select an image smaller than 10MB.");
+      // Reset the file input
+      e.target.value = "";
+      return;
+    }
+
     const reader = new FileReader();
 
     reader.readAsDataURL(file);
@@ -21,7 +31,15 @@ const ProfilePage = () => {
     reader.onload = async () => {
       const base64Image = reader.result;
       setSelectedImg(base64Image);
-      await updateProfile({ profilePic: base64Image });
+      
+      try {
+        await updateProfile({ profilePic: base64Image });
+      } catch (error) {
+        // Reset selectedImg if upload fails
+        setSelectedImg(null);
+        // Reset the file input
+        e.target.value = "";
+      }
     };
   };
 

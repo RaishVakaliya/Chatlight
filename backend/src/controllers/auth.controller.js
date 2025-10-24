@@ -95,8 +95,17 @@ export const updateProfile = async (req, res) => {
     const updateData = {};
 
     if (profilePic) {
-      const uploadResponse = await cloudinary.uploader.upload(profilePic);
-      updateData.profilePic = uploadResponse.secure_url;
+      try {
+        const uploadResponse = await cloudinary.uploader.upload(profilePic);
+        updateData.profilePic = uploadResponse.secure_url;
+      } catch (cloudinaryError) {
+        console.log("Cloudinary upload error:", cloudinaryError);
+        // Check if it's a file size error
+        if (cloudinaryError.message && cloudinaryError.message.includes('File size too large')) {
+          return res.status(400).json({ message: "File size too large. Please select an image smaller than 10MB." });
+        }
+        return res.status(400).json({ message: "Failed to upload image. Please try again." });
+      }
     }
 
     if (description !== undefined) {
@@ -124,6 +133,10 @@ export const updateProfile = async (req, res) => {
     res.status(200).json(updatedUser);
   } catch (error) {
     console.log("error in update profile:", error);
+    // Check if it's a payload too large error from Express
+    if (error.type === 'entity.too.large') {
+      return res.status(413).json({ message: "File size too large. Please select an image smaller than 10MB." });
+    }
     res.status(500).json({ message: "Internal server error" });
   }
 };
