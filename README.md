@@ -2,18 +2,21 @@
 
 Highlights:
 
-- Tech stack: MERN + Socket.io + TailwindCSS + Daisy UI
-- Authentication && Authorization with JWT
+- Tech stack: MERN + Socket.io + TailwindCSS + Daisy UI + Firebase Google OAuth + Cloudinary 
+- Authentication & Authorization with JWT + Firebase Google OAuth
+- Email verification system with 6-digit codes
 - Real-time messaging with Socket.io
 - Message pinning functionality (like WhatsApp)
 - Message replies with context display
-- Online user status
+- Online user status (real-time)
+- Profile management with instant updates
 - Global state management with Zustand
-- Mobile-responsive design
+- Mobile-responsive design with modern UI
 - Custom background themes
-- Image sharing with preview
-- Error handling both on the server and on the client
-- At the end Deployment like a pro for FREE!
+- Image sharing with Cloudinary integration
+- Professional email templates (verification & welcome)
+- Comprehensive error handling
+- Account deletion functionality
 - And much more!
 
 ### Setup .env file
@@ -28,19 +31,25 @@ CLOUDINARY_API_KEY=...
 CLOUDINARY_API_SECRET=...
 
 NODE_ENV=development
-```
 
-### Build the app
+FIREBASE_PROJECT_ID=...
+FIREBASE_CLIENT_EMAIL=...
+FIREBASE_PRIVATE_KEY=...
 
-```shell
-npm run build
+EMAIL_USER=...
+EMAIL_PASSWORD=...
 ```
 
 ### Start the app
 
 ```shell
-npm start
+cd frontend
+npm run dev
 ```
 
-<!-- to do -->
-<!-- Login history -->
+### Start the server
+
+```shell
+cd backend
+npm run dev
+```

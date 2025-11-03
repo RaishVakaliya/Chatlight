@@ -139,7 +139,7 @@ const EmailVerification = ({ email, onClose, onVerificationSuccess }) => {
 
         {/* Description */}
         <p className="text-center text-base-content/70 mb-8 text-sm leading-relaxed">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.
+          We've sent a 6-digit verification code to your email address. Please enter the code below to verify your account and complete your registration. The code will expire in 10 minutes for security purposes.
         </p>
 
         {/* Code Input */}
