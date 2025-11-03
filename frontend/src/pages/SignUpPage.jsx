@@ -14,6 +14,7 @@ import logo from "../assets/app_logo.png";
 
 import AuthImagePattern from "../components/AuthImagePattern";
 import toast from "react-hot-toast";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 
 const SignUpPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -23,7 +24,7 @@ const SignUpPage = () => {
     password: "",
   });
 
-  const { signup, isSigningUp } = useAuthStore();
+  const { signup, isSigningUp, loginWithGoogle, isGoogleLoading } = useAuthStore();
 
   const validateForm = () => {
     if (!formData.fullName.trim()) return toast.error("Full name is required");
@@ -151,6 +152,20 @@ const SignUpPage = () => {
               )}
             </button>
           </form>
+
+          {/* OR Divider */}
+          <div className="flex items-center gap-4">
+            <div className="flex-1 h-px bg-base-300"></div>
+            <span className="text-base-content/60 text-sm">OR</span>
+            <div className="flex-1 h-px bg-base-300"></div>
+          </div>
+
+          {/* Google Sign-In Button */}
+          <GoogleSignInButton 
+            onClick={loginWithGoogle}
+            isLoading={isGoogleLoading}
+            text="Continue with Google"
+          />
 
           <div className="text-center">
             <p className="text-base-content/60">

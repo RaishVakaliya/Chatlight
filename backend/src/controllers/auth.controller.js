@@ -3,6 +3,7 @@ import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import cloudinary from "../lib/cloudinary.js";
 import { io } from "../lib/socket.js";
+import { verifyFirebaseToken } from "../middleware/firebase-auth.middleware.js";
 
 export const signup = async (req, res) => {
   const { fullName, email, password } = req.body;
@@ -73,6 +74,70 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     console.log("Error in login controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const firebaseAuth = async (req, res) => {
+  const { idToken } = req.body;
+  
+  try {
+    if (!idToken) {
+      return res.status(400).json({ message: "Firebase ID token is required" });
+    }
+
+    // Verify the Firebase ID token
+    const result = await verifyFirebaseToken(idToken);
+    
+    if (!result.success) {
+      return res.status(401).json({ message: "Invalid Firebase token" });
+    }
+
+    const { decodedToken } = result;
+    const { uid, email, name, picture, email_verified } = decodedToken;
+
+    // Check if user already exists by Firebase UID
+    let user = await User.findOne({ firebaseUid: uid });
+    
+    if (!user) {
+      // Check if user exists by email (for migration from email/password)
+      user = await User.findOne({ email: email });
+      
+      if (user) {
+        // Update existing user with Firebase data
+        user.firebaseUid = uid;
+        user.emailVerified = email_verified;
+        user.authProvider = 'google';
+        if (picture && !user.profilePic) {
+          user.profilePic = picture;
+        }
+        await user.save();
+      } else {
+        // Create new user
+        user = new User({
+          firebaseUid: uid,
+          email: email,
+          fullName: name || email.split('@')[0],
+          profilePic: picture || "",
+          emailVerified: email_verified,
+          authProvider: 'google'
+        });
+        await user.save();
+      }
+    }
+
+    // Generate JWT token for our app
+    generateToken(user._id, res);
+
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      profilePic: user.profilePic,
+      description: user.description,
+    });
+  } catch (error) {
+    console.log("Error in Firebase auth controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

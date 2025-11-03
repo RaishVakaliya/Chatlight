@@ -13,8 +13,23 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function() {
+        return !this.firebaseUid; // Password not required for Firebase users
+      },
       minlength: 6,
+    },
+    firebaseUid: {
+      type: String,
+      sparse: true, // Allows null values but ensures uniqueness when present
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    authProvider: {
+      type: String,
+      enum: ['local', 'google'],
+      default: 'local',
     },
     profilePic: {
       type: String,

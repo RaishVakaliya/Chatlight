@@ -4,6 +4,7 @@ import AuthImagePattern from "../components/AuthImagePattern";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare } from "lucide-react";
 import logo from "../../src/assets/app_logo.png";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -11,7 +12,7 @@ const LoginPage = () => {
     email: "",
     password: "",
   });
-  const { login, isLoggingIn } = useAuthStore();
+  const { login, isLoggingIn, loginWithGoogle, isGoogleLoading } = useAuthStore();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -103,6 +104,20 @@ const LoginPage = () => {
               )}
             </button>
           </form>
+
+          {/* OR Divider */}
+          <div className="flex items-center gap-4">
+            <div className="flex-1 h-px bg-base-300"></div>
+            <span className="text-base-content/60 text-sm">OR</span>
+            <div className="flex-1 h-px bg-base-300"></div>
+          </div>
+
+          {/* Google Sign-In Button */}
+          <GoogleSignInButton 
+            onClick={loginWithGoogle}
+            isLoading={isGoogleLoading}
+            text="Continue with Google"
+          />
 
           <div className="text-center">
             <p className="text-base-content/60">
