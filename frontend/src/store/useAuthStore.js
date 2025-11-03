@@ -14,6 +14,7 @@ export const useAuthStore = create((set, get) => ({
   isUpdatingProfile: false,
   isCheckingAuth: true,
   isGoogleLoading: false,
+  isVerifying: false,
   onlineUsers: [],
   socket: null,
 
@@ -124,6 +125,39 @@ export const useAuthStore = create((set, get) => ({
       console.log("error in delete account:", error);
       toast.error(error.response?.data?.message || "Failed to delete account");
       return { success: false, error: error.response?.data?.message };
+    }
+  },
+
+  sendVerificationCode: async (data) => {
+    try {
+      await axiosInstance.post("/auth/send-verification", data);
+      return { success: true };
+    } catch (error) {
+      console.log("error in send verification:", error);
+      throw new Error(error.response?.data?.message || "Failed to send verification code");
+    }
+  },
+
+  verifyEmail: async (email, code) => {
+    set({ isVerifying: true });
+    try {
+      const res = await axiosInstance.post("/auth/verify-email", { email, code });
+      return { success: true };
+    } catch (error) {
+      console.log("error in verify email:", error);
+      throw new Error(error.response?.data?.message || "Verification failed");
+    } finally {
+      set({ isVerifying: false });
+    }
+  },
+
+  resendVerificationCode: async (email) => {
+    try {
+      await axiosInstance.post("/auth/resend-verification", { email });
+      return { success: true };
+    } catch (error) {
+      console.log("error in resend verification:", error);
+      throw new Error(error.response?.data?.message || "Failed to resend code");
     }
   },
 

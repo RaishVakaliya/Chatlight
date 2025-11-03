@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import cloudinary from "../lib/cloudinary.js";
 import { io } from "../lib/socket.js";
 import { verifyFirebaseToken } from "../middleware/firebase-auth.middleware.js";
+import { generateVerificationCode, sendVerificationEmail, sendWelcomeEmail } from "../lib/email.js";
 
 export const signup = async (req, res) => {
   const { fullName, email, password } = req.body;
@@ -12,38 +13,35 @@ export const signup = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    if (password.length < 6) {
-      return res
-        .status(400)
-        .json({ message: "Password must be at least 6 characters" });
-    }
-
-    const user = await User.findOne({ email });
-
-    if (user) return res.status(400).json({ message: "Email already exists" });
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const newUser = new User({
-      fullName,
-      email,
-      password: hashedPassword,
+    // Find verified user
+    const user = await User.findOne({ 
+      email, 
+      emailVerified: true,
+      verificationCode: { $exists: false }
     });
 
-    if (newUser) {
-      generateToken(newUser._id, res);
-      await newUser.save();
-
-      res.status(201).json({
-        _id: newUser._id,
-        fullName: newUser.fullName,
-        email: newUser.email,
-        profilePic: newUser.profilePic,
-      });
-    } else {
-      res.status(400).json({ message: "Invalid user data" });
+    if (!user) {
+      return res.status(400).json({ message: "Please verify your email first" });
     }
+
+    // Generate token and complete signup
+    generateToken(user._id, res);
+
+    // Send welcome email
+    try {
+      await sendWelcomeEmail(email, user.fullName);
+    } catch (emailError) {
+      console.log("Welcome email failed:", emailError.message);
+      // Don't fail signup if welcome email fails
+    }
+
+    res.status(201).json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      profilePic: user.profilePic,
+      description: user.description,
+    });
   } catch (error) {
     console.log("Error in signup controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
@@ -248,6 +246,121 @@ export const checkAuth = (req, res) => {
     res.status(200).json(req.user);
   } catch (error) {
     console.log("Error in checkAuth controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const sendVerificationCode = async (req, res) => {
+  const { fullName, email, password } = req.body;
+  try {
+    if (!fullName || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser && existingUser.emailVerified) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    // Generate verification code
+    const verificationCode = generateVerificationCode();
+    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    if (existingUser && !existingUser.emailVerified) {
+      // Update existing unverified user
+      existingUser.fullName = fullName;
+      existingUser.password = await bcrypt.hash(password, 10);
+      existingUser.verificationCode = verificationCode;
+      existingUser.verificationCodeExpires = verificationCodeExpires;
+      await existingUser.save();
+    } else {
+      // Create new user
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = new User({
+        fullName,
+        email,
+        password: hashedPassword,
+        verificationCode,
+        verificationCodeExpires,
+        emailVerified: false,
+      });
+      await newUser.save();
+    }
+
+    // Send verification email
+    await sendVerificationEmail(email, verificationCode, fullName);
+
+    res.status(200).json({ 
+      message: "Verification code sent to your email",
+      email: email 
+    });
+  } catch (error) {
+    console.log("Error in sendVerificationCode controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const verifyEmail = async (req, res) => {
+  const { email, code } = req.body;
+  try {
+    if (!email || !code) {
+      return res.status(400).json({ message: "Email and verification code are required" });
+    }
+
+    const user = await User.findOne({ 
+      email,
+      verificationCode: code,
+      verificationCodeExpires: { $gt: new Date() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired verification code" });
+    }
+
+    // Mark email as verified and clear verification code
+    user.emailVerified = true;
+    user.verificationCode = undefined;
+    user.verificationCodeExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Email verified successfully" });
+  } catch (error) {
+    console.log("Error in verifyEmail controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const resendVerificationCode = async (req, res) => {
+  const { email } = req.body;
+  try {
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email, emailVerified: false });
+    if (!user) {
+      return res.status(400).json({ message: "User not found or already verified" });
+    }
+
+    // Generate new verification code
+    const verificationCode = generateVerificationCode();
+    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    user.verificationCode = verificationCode;
+    user.verificationCodeExpires = verificationCodeExpires;
+    await user.save();
+
+    // Send verification email
+    await sendVerificationEmail(email, verificationCode, user.fullName);
+
+    res.status(200).json({ message: "Verification code resent successfully" });
+  } catch (error) {
+    console.log("Error in resendVerificationCode controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

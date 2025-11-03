@@ -15,16 +15,18 @@ import logo from "../assets/app_logo.png";
 import AuthImagePattern from "../components/AuthImagePattern";
 import toast from "react-hot-toast";
 import GoogleSignInButton from "../components/GoogleSignInButton";
+import EmailVerification from "../components/EmailVerification";
 
 const SignUpPage = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     password: "",
   });
 
-  const { signup, isSigningUp, loginWithGoogle, isGoogleLoading } = useAuthStore();
+  const { signup, sendVerificationCode, isSigningUp, loginWithGoogle, isGoogleLoading } = useAuthStore();
 
   const validateForm = () => {
     if (!formData.fullName.trim()) return toast.error("Full name is required");
@@ -38,12 +40,33 @@ const SignUpPage = () => {
     return true;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const success = validateForm();
 
-    if (success === true) signup(formData);
+    if (success === true) {
+      try {
+        await sendVerificationCode(formData);
+        setShowVerification(true);
+        toast.success("Verification code sent to your email!");
+      } catch (error) {
+        toast.error(error.message || "Failed to send verification code");
+      }
+    }
+  };
+
+  const handleVerificationSuccess = async () => {
+    try {
+      await signup(formData);
+      setShowVerification(false);
+    } catch (error) {
+      toast.error(error.message || "Signup failed");
+    }
+  };
+
+  const handleCloseVerification = () => {
+    setShowVerification(false);
   };
 
   return (
@@ -184,6 +207,15 @@ const SignUpPage = () => {
         title="Join our community"
         subtitle="Connect with friends, share moments, and stay in touch with your loved ones."
       />
+
+      {/* Email Verification Modal */}
+      {showVerification && (
+        <EmailVerification
+          email={formData.email}
+          onClose={handleCloseVerification}
+          onVerificationSuccess={handleVerificationSuccess}
+        />
+      )}
     </div>
   );
 };

@@ -39,6 +39,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    verificationCode: {
+      type: String,
+    },
+    verificationCodeExpires: {
+      type: Date,
+    },
     deleted: {
       type: Boolean,
       default: false,
