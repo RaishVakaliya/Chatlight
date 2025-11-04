@@ -6,8 +6,15 @@ import UserItem from "./UserItem";
 import { Users } from "lucide-react";
 
 const Sidebar = () => {
-  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading, subscribeToGlobalEvents, unsubscribeFromGlobalEvents } =
-    useChatStore();
+  const {
+    getUsers,
+    users,
+    selectedUser,
+    setSelectedUser,
+    isUsersLoading,
+    subscribeToGlobalEvents,
+    unsubscribeFromGlobalEvents,
+  } = useChatStore();
 
   const { onlineUsers } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);

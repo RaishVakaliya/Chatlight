@@ -26,7 +26,14 @@ const SignUpPage = () => {
     password: "",
   });
 
-  const { signup, sendVerificationCode, isSigningUp, loginWithGoogle, isGoogleLoading, isSendingVerification } = useAuthStore();
+  const {
+    signup,
+    sendVerificationCode,
+    isSigningUp,
+    loginWithGoogle,
+    isGoogleLoading,
+    isSendingVerification,
+  } = useAuthStore();
 
   const validateForm = () => {
     if (!formData.fullName.trim()) return toast.error("Full name is required");
@@ -189,7 +196,7 @@ const SignUpPage = () => {
           </div>
 
           {/* Google Sign-In Button */}
-          <GoogleSignInButton 
+          <GoogleSignInButton
             onClick={loginWithGoogle}
             isLoading={isGoogleLoading}
             text="Continue with Google"

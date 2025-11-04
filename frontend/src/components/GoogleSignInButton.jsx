@@ -1,6 +1,10 @@
 import { Loader2 } from "lucide-react";
 
-const GoogleSignInButton = ({ onClick, isLoading, text = "Continue with Google" }) => {
+const GoogleSignInButton = ({
+  onClick,
+  isLoading,
+  text = "Continue with Google",
+}) => {
   return (
     <button
       type="button"

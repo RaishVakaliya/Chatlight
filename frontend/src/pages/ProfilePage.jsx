@@ -18,7 +18,9 @@ const ProfilePage = () => {
     // Check file size (10MB limit to match backend)
     const maxSize = 10 * 1024 * 1024; // 10MB in bytes
     if (file.size > maxSize) {
-      toast.error("File size too large. Please select an image smaller than 10MB.");
+      toast.error(
+        "File size too large. Please select an image smaller than 10MB."
+      );
       // Reset the file input
       e.target.value = "";
       return;
@@ -31,7 +33,7 @@ const ProfilePage = () => {
     reader.onload = async () => {
       const base64Image = reader.result;
       setSelectedImg(base64Image);
-      
+
       try {
         await updateProfile({ profilePic: base64Image });
       } catch (error) {
@@ -180,7 +182,11 @@ const ProfilePage = () => {
               </div>
               <div className="flex items-center justify-between py-2">
                 <span>Account Status</span>
-                <span className={`${authUser.deleted ? "text-red-500" : "text-green-500"}`}>
+                <span
+                  className={`${
+                    authUser.deleted ? "text-red-500" : "text-green-500"
+                  }`}
+                >
                   {authUser.deleted ? "Deleted" : "Active"}
                 </span>
               </div>
@@ -189,13 +195,18 @@ const ProfilePage = () => {
 
           {/* Danger Zone */}
           <div className="mt-8 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6">
-            <h2 className="text-lg font-medium text-red-800 dark:text-red-200 mb-4">Danger Zone</h2>
+            <h2 className="text-lg font-medium text-red-800 dark:text-red-200 mb-4">
+              Danger Zone
+            </h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between py-3 border-b border-red-200 dark:border-red-800">
                 <div>
-                  <h3 className="font-medium text-red-800 dark:text-red-200">Delete Account</h3>
+                  <h3 className="font-medium text-red-800 dark:text-red-200">
+                    Delete Account
+                  </h3>
                   <p className="text-sm text-red-600 dark:text-red-300 mt-1">
-                    Permanently delete your account and remove your profile data. Your messages will remain visible to other users.
+                    Permanently delete your account and remove your profile
+                    data. Your messages will remain visible to other users.
                   </p>
                 </div>
                 <button

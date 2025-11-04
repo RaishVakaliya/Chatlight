@@ -66,9 +66,9 @@ export const useChatStore = create((set, get) => ({
       (user) => (user.unreadCount || 0) > 0
     ).length;
 
-    set({ 
+    set({
       users: updatedUsers,
-      unreadChatCount: unreadChatCount
+      unreadChatCount: unreadChatCount,
     });
   },
 
@@ -103,8 +103,8 @@ export const useChatStore = create((set, get) => ({
               image: res.data.image,
               senderId: res.data.senderId,
               createdAt: res.data.createdAt,
-              deleted: res.data.deleted
-            }
+              deleted: res.data.deleted,
+            },
           };
         }
         return user;
@@ -154,14 +154,17 @@ export const useChatStore = create((set, get) => ({
       if (isMessageSentToCurrentUser) {
         // Use the selective update function instead of full users array manipulation
         const { users, selectedUser } = get();
-        const senderUser = users.find(user => user._id === newMessage.senderId);
-        
+        const senderUser = users.find(
+          (user) => user._id === newMessage.senderId
+        );
+
         if (senderUser) {
           // Only increment unread count if this chat is not currently selected
-          const shouldIncrementUnread = !selectedUser || selectedUser._id !== newMessage.senderId;
-          const newUnreadCount = shouldIncrementUnread 
-            ? (senderUser.unreadCount || 0) + 1 
-            : (senderUser.unreadCount || 0);
+          const shouldIncrementUnread =
+            !selectedUser || selectedUser._id !== newMessage.senderId;
+          const newUnreadCount = shouldIncrementUnread
+            ? (senderUser.unreadCount || 0) + 1
+            : senderUser.unreadCount || 0;
 
           // Update the specific user with new unread count, last message time, and last message data
           const updatedUsers = users.map((user) => {
@@ -175,8 +178,8 @@ export const useChatStore = create((set, get) => ({
                   image: newMessage.image,
                   senderId: newMessage.senderId,
                   createdAt: newMessage.createdAt,
-                  deleted: newMessage.deleted
-                }
+                  deleted: newMessage.deleted,
+                },
               };
             }
             return user;
@@ -262,43 +265,45 @@ export const useChatStore = create((set, get) => ({
     // Listen for message updates (image upload completion)
     socket.on("messageUpdated", (updatedMessage) => {
       const { messages } = get();
-      
+
       // Update the message in current messages
       const updatedMessages = messages.map((msg) =>
         msg._id === updatedMessage._id ? updatedMessage : msg
       );
-      
+
       set({ messages: updatedMessages });
     });
 
     // Listen for message deletion events
     socket.on("messageDeleted", (deletedMessage) => {
       const { messages, pinnedMessages, users } = get();
-      
+
       // Update the message in current messages
       const updatedMessages = messages.map((msg) =>
         msg._id === deletedMessage._id ? deletedMessage : msg
       );
-      
+
       // Remove from pinned messages if it was pinned
       const updatedPinnedMessages = pinnedMessages.filter(
         (msg) => msg._id !== deletedMessage._id
       );
-      
+
       // Update sidebar if this was the last message
       const currentUserId = useAuthStore.getState().authUser._id;
       const updatedUsers = users.map((user) => {
         // Check if this deleted message was the last message for this conversation
         // The deleted message could be from current user to this user, or from this user to current user
-        const isLastMessageMatch = user.lastMessage && (
-          (user.lastMessage.senderId === deletedMessage.senderId && 
-           user.lastMessage.createdAt === deletedMessage.createdAt) ||
-          // Additional check: if the conversation involves this user and the deleted message
-          ((deletedMessage.senderId === currentUserId && deletedMessage.receiverId === user._id) ||
-           (deletedMessage.senderId === user._id && deletedMessage.receiverId === currentUserId)) &&
-          user.lastMessage.createdAt === deletedMessage.createdAt
-        );
-        
+        const isLastMessageMatch =
+          user.lastMessage &&
+          ((user.lastMessage.senderId === deletedMessage.senderId &&
+            user.lastMessage.createdAt === deletedMessage.createdAt) ||
+            // Additional check: if the conversation involves this user and the deleted message
+            (((deletedMessage.senderId === currentUserId &&
+              deletedMessage.receiverId === user._id) ||
+              (deletedMessage.senderId === user._id &&
+                deletedMessage.receiverId === currentUserId)) &&
+              user.lastMessage.createdAt === deletedMessage.createdAt));
+
         if (isLastMessageMatch) {
           return {
             ...user,
@@ -306,29 +311,29 @@ export const useChatStore = create((set, get) => ({
               ...user.lastMessage,
               deleted: true,
               text: null,
-              image: null
-            }
+              image: null,
+            },
           };
         }
         return user;
       });
-      
-      set({ 
+
+      set({
         messages: updatedMessages,
         pinnedMessages: updatedPinnedMessages,
-        users: updatedUsers
+        users: updatedUsers,
       });
     });
 
     // Listen for message edit events
     socket.on("messageEdited", (editedMessage) => {
       const { messages } = get();
-      
+
       // Update the message in current messages
       const updatedMessages = messages.map((msg) =>
         msg._id === editedMessage._id ? editedMessage : msg
       );
-      
+
       set({ messages: updatedMessages });
     });
   },
@@ -340,30 +345,31 @@ export const useChatStore = create((set, get) => ({
     // Listen for profile updates from any user
     socket.on("profileUpdated", (profileData) => {
       const { users, selectedUser } = get();
-      
+
       // Update users list in sidebar
-      const updatedUsers = users.map(user => 
-        user._id === profileData.userId 
-          ? { 
-              ...user, 
+      const updatedUsers = users.map((user) =>
+        user._id === profileData.userId
+          ? {
+              ...user,
               profilePic: profileData.profilePic,
-              description: profileData.description 
+              description: profileData.description,
             }
           : user
       );
-      
+
       // Update selected user if it's the one that got updated (for chat header and contact info)
-      const updatedSelectedUser = selectedUser && selectedUser._id === profileData.userId
-        ? {
-            ...selectedUser,
-            profilePic: profileData.profilePic,
-            description: profileData.description
-          }
-        : selectedUser;
-      
-      set({ 
+      const updatedSelectedUser =
+        selectedUser && selectedUser._id === profileData.userId
+          ? {
+              ...selectedUser,
+              profilePic: profileData.profilePic,
+              description: profileData.description,
+            }
+          : selectedUser;
+
+      set({
         users: updatedUsers,
-        selectedUser: updatedSelectedUser
+        selectedUser: updatedSelectedUser,
       });
     });
   },
@@ -371,7 +377,7 @@ export const useChatStore = create((set, get) => ({
   unsubscribeFromGlobalEvents: () => {
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
-    
+
     socket.off("profileUpdated");
   },
 
@@ -485,7 +491,7 @@ export const useChatStore = create((set, get) => ({
   editMessage: async (messageId, newText) => {
     try {
       const res = await axiosInstance.put(`/messages/edit/${messageId}`, {
-        text: newText
+        text: newText,
       });
 
       // Update the message in current messages
@@ -521,25 +527,29 @@ export const useChatStore = create((set, get) => ({
       const currentUserId = useAuthStore.getState().authUser._id;
       const updatedUsers = users.map((user) => {
         // Check if this deleted message was the last message for this conversation
-        if (selectedUser && user._id === selectedUser._id && user.lastMessage && 
-            user.lastMessage.createdAt === res.data.createdAt) {
+        if (
+          selectedUser &&
+          user._id === selectedUser._id &&
+          user.lastMessage &&
+          user.lastMessage.createdAt === res.data.createdAt
+        ) {
           return {
             ...user,
             lastMessage: {
               ...user.lastMessage,
               deleted: true,
               text: null,
-              image: null
-            }
+              image: null,
+            },
           };
         }
         return user;
       });
 
-      set({ 
-        messages: updatedMessages, 
+      set({
+        messages: updatedMessages,
         pinnedMessages: updatedPinnedMessages,
-        users: updatedUsers
+        users: updatedUsers,
       });
 
       toast.success("Message deleted");
@@ -549,6 +559,6 @@ export const useChatStore = create((set, get) => ({
   },
 
   setReplyingTo: (message) => set({ replyingTo: message }),
-  
+
   clearReplyingTo: () => set({ replyingTo: null }),
 }));

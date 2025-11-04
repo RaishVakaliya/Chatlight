@@ -66,7 +66,7 @@ export const useAuthStore = create((set, get) => ({
     set({ isGoogleLoading: true });
     try {
       const result = await signInWithGoogle();
-      
+
       if (!result.success) {
         toast.error(result.error || "Google sign-in failed");
         return;
@@ -74,7 +74,7 @@ export const useAuthStore = create((set, get) => ({
 
       // Send the Firebase ID token to our backend
       const res = await axiosInstance.post("/auth/firebase-auth", {
-        idToken: result.idToken
+        idToken: result.idToken,
       });
 
       set({ authUser: res.data });
@@ -116,7 +116,7 @@ export const useAuthStore = create((set, get) => ({
   deleteAccount: async (confirmationText) => {
     try {
       await axiosInstance.delete("/auth/delete-account", {
-        data: { confirmationText }
+        data: { confirmationText },
       });
       set({ authUser: null });
       get().disconnectSocket();
@@ -136,7 +136,9 @@ export const useAuthStore = create((set, get) => ({
       return { success: true };
     } catch (error) {
       console.log("error in send verification:", error);
-      throw new Error(error.response?.data?.message || "Failed to send verification code");
+      throw new Error(
+        error.response?.data?.message || "Failed to send verification code"
+      );
     } finally {
       set({ isSendingVerification: false });
     }
@@ -145,7 +147,10 @@ export const useAuthStore = create((set, get) => ({
   verifyEmail: async (email, code) => {
     set({ isVerifying: true });
     try {
-      const res = await axiosInstance.post("/auth/verify-email", { email, code });
+      const res = await axiosInstance.post("/auth/verify-email", {
+        email,
+        code,
+      });
       return { success: true };
     } catch (error) {
       console.log("error in verify email:", error);

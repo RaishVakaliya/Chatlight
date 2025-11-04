@@ -63,22 +63,30 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
           <h4 className="text-base font-medium text-base-content/70">
             Account Information
           </h4>
-          
+
           <div className="space-y-3">
             <div className="flex justify-between items-center py-2">
               <span className="text-sm text-base-content/70">Member Since</span>
               <span className="text-sm font-medium">
-                {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                }) : 'Unknown'}
+                {user.createdAt
+                  ? new Date(user.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "Unknown"}
               </span>
             </div>
-            
+
             <div className="flex justify-between items-center py-2">
-              <span className="text-sm text-base-content/70">Account Status</span>
-              <span className={`text-sm font-medium ${user.deleted ? "text-red-500" : "text-green-500"}`}>
+              <span className="text-sm text-base-content/70">
+                Account Status
+              </span>
+              <span
+                className={`text-sm font-medium ${
+                  user.deleted ? "text-red-500" : "text-green-500"
+                }`}
+              >
                 {user.deleted ? "Deleted" : "Active"}
               </span>
             </div>

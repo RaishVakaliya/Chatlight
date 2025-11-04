@@ -12,7 +12,8 @@ const LoginPage = () => {
     email: "",
     password: "",
   });
-  const { login, isLoggingIn, loginWithGoogle, isGoogleLoading } = useAuthStore();
+  const { login, isLoggingIn, loginWithGoogle, isGoogleLoading } =
+    useAuthStore();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -113,7 +114,7 @@ const LoginPage = () => {
           </div>
 
           {/* Google Sign-In Button */}
-          <GoogleSignInButton 
+          <GoogleSignInButton
             onClick={loginWithGoogle}
             isLoading={isGoogleLoading}
             text="Continue with Google"

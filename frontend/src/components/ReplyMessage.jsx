@@ -9,10 +9,12 @@ const ReplyMessage = ({ replyTo, onClick }) => {
   if (!replyTo) return null;
 
   const isOwnReply = replyTo.senderId._id === authUser._id;
-  const senderName = isOwnReply ? "You" : (replyTo.senderId.fullName || selectedUser?.fullName || "Unknown");
+  const senderName = isOwnReply
+    ? "You"
+    : replyTo.senderId.fullName || selectedUser?.fullName || "Unknown";
 
   return (
-    <div 
+    <div
       className="bg-base-200/50 border-l-4 border-primary rounded-lg p-2 mb-2 cursor-pointer hover:bg-base-200/70 transition-colors touch-manipulation"
       onClick={onClick}
     >
@@ -31,7 +33,7 @@ const ReplyMessage = ({ replyTo, onClick }) => {
           {formatMessageTime(replyTo.createdAt)}
         </span>
       </div>
-      
+
       <div className="pl-4 sm:pl-6">
         {replyTo.image && (
           <img
@@ -41,11 +43,14 @@ const ReplyMessage = ({ replyTo, onClick }) => {
           />
         )}
         {replyTo.text && (
-          <p className="text-xs sm:text-sm text-base-content/80 overflow-hidden text-ellipsis" style={{
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical'
-          }}>
+          <p
+            className="text-xs sm:text-sm text-base-content/80 overflow-hidden text-ellipsis"
+            style={{
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+            }}
+          >
             {replyTo.text}
           </p>
         )}
