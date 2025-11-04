@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema(
     },
     profilePic: {
       type: String,
-      default: "",
+      default: process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png",
     },
     description: {
       type: String,

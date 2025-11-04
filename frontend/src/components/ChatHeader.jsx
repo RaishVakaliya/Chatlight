@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import { getProfilePicture } from "../lib/utils";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 
@@ -18,14 +19,14 @@ const ChatHeader = ({ onProfileClick }) => {
             <div className="avatar">
               <div className="size-10 rounded-full relative select-none">
                 <img
-                  src={selectedUser.profilePic || "/avatar.png"}
+                  src={getProfilePicture(selectedUser.profilePic)}
                   alt={selectedUser.fullName}
                 />
               </div>
             </div>
 
             {/* User info */}
-            <div>
+            <div> 
               <h3 className="font-medium">{selectedUser.fullName}</h3>
               <p className="text-sm text-base-content/70">
                 {onlineUsers.includes(selectedUser._id) ? "Online" : "Offline"}

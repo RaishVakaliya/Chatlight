@@ -57,7 +57,7 @@ export const getUsersForSidebar = async (req, res) => {
           ? {
               ...user._doc,
               fullName: "Chatlight User",
-              profilePic: "/avatar.png",
+              profilePic: process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png",
               description: "",
             }
           : user._doc;

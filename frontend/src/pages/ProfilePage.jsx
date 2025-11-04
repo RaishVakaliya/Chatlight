@@ -3,6 +3,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { Camera, Mail, User, FileText, Save, Trash2 } from "lucide-react";
 import DeleteAccountModal from "../components/DeleteAccountModal";
 import toast from "react-hot-toast";
+import { getProfilePicture } from "../lib/utils";
 
 const ProfilePage = () => {
   const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
@@ -10,6 +11,7 @@ const ProfilePage = () => {
   const [description, setDescription] = useState(authUser?.description || "");
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -69,7 +71,7 @@ const ProfilePage = () => {
           <div className="flex flex-col items-center gap-4">
             <div className="relative select-none">
               <img
-                src={selectedImg || authUser.profilePic || "/avatar.png"}
+                src={selectedImg || getProfilePicture(authUser.profilePic)}
                 alt="Profile"
                 className="size-32 rounded-full object-cover border-4 "
               />

@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { useThemeStore } from "../store/useThemeStore";
+import { getProfilePicture } from "../lib/utils";
 import {
   LogOut,
   MessageSquare,
@@ -275,7 +276,7 @@ const Navbar = () => {
                     <div className="avatar">
                       <div className="w-10 h-10 rounded-full">
                         <img
-                          src={user.profilePic || "/avatar.png"}
+                          src={getProfilePicture(user.profilePic)}
                           alt={user.fullName}
                         />
                       </div>

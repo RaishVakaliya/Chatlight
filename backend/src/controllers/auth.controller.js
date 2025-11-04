@@ -39,7 +39,7 @@ export const signup = async (req, res) => {
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
-      profilePic: user.profilePic,
+      profilePic: user.profilePic || process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png",
       description: user.description,
     });
   } catch (error) {
@@ -68,7 +68,7 @@ export const login = async (req, res) => {
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
-      profilePic: user.profilePic,
+      profilePic: user.profilePic || process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png",
     });
   } catch (error) {
     console.log("Error in login controller", error.message);
@@ -106,8 +106,9 @@ export const firebaseAuth = async (req, res) => {
         user.firebaseUid = uid;
         user.emailVerified = email_verified;
         user.authProvider = 'google';
-        if (picture && !user.profilePic) {
-          user.profilePic = picture;
+        // Set profile picture from Google or use default
+        if (!user.profilePic) {
+          user.profilePic = picture || process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png";
         }
         await user.save();
       } else {
@@ -116,7 +117,7 @@ export const firebaseAuth = async (req, res) => {
           firebaseUid: uid,
           email: email,
           fullName: name || email.split('@')[0],
-          profilePic: picture || "",
+          profilePic: picture || process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png",
           emailVerified: email_verified,
           authProvider: 'google'
         });
@@ -131,7 +132,7 @@ export const firebaseAuth = async (req, res) => {
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
-      profilePic: user.profilePic,
+      profilePic: user.profilePic || process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png",
       description: user.description,
     });
   } catch (error) {
@@ -226,7 +227,7 @@ export const deleteAccount = async (req, res) => {
         // Clear sensitive data but keep basic info for message history
         email: `deleted_${userId}@deleted.com`,
         password: null,
-        profilePic: "/avatar.png", // Default avatar
+        profilePic: process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png", // Default avatar
         description: "",
       },
     });

@@ -6,6 +6,11 @@ export function formatMessageTime(date) {
   });
 }
 
+export function getProfilePicture(profilePic) {
+  const defaultAvatar = import.meta.env.VITE_CLOUDINARY_DEFAULT_AVATAR || "/avatar.png";
+  return profilePic && profilePic.trim() !== "" ? profilePic : defaultAvatar;
+}
+
 export function truncateText(text, maxLength = 30) {
   if (!text) return "";
   if (text.length <= maxLength) return text;
