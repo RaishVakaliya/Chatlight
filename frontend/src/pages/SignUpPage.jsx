@@ -26,7 +26,7 @@ const SignUpPage = () => {
     password: "",
   });
 
-  const { signup, sendVerificationCode, isSigningUp, loginWithGoogle, isGoogleLoading } = useAuthStore();
+  const { signup, sendVerificationCode, isSigningUp, loginWithGoogle, isGoogleLoading, isSendingVerification } = useAuthStore();
 
   const validateForm = () => {
     if (!formData.fullName.trim()) return toast.error("Full name is required");
@@ -163,12 +163,17 @@ const SignUpPage = () => {
             <button
               type="submit"
               className="btn btn-primary w-full"
-              disabled={isSigningUp}
+              disabled={isSendingVerification || isSigningUp}
             >
-              {isSigningUp ? (
+              {isSendingVerification ? (
                 <>
                   <Loader2 className="size-5 animate-spin" />
-                  Loading...
+                  Sending Code...
+                </>
+              ) : isSigningUp ? (
+                <>
+                  <Loader2 className="size-5 animate-spin" />
+                  Creating Account...
                 </>
               ) : (
                 "Create Account"

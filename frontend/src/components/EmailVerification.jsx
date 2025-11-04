@@ -182,7 +182,7 @@ const EmailVerification = ({ email, onClose, onVerificationSuccess }) => {
           className={`w-full py-3 rounded-full font-semibold text-white transition-all duration-200 ${
             isCodeComplete && !isVerifying
               ? "bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 shadow-lg hover:shadow-xl"
-              : "bg-gray-300 cursor-not-allowed"
+              : "bg-gray-500 cursor-not-allowed"
           }`}
         >
           {isVerifying ? "Verifying..." : "Verify Email"}

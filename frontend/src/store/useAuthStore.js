@@ -15,6 +15,7 @@ export const useAuthStore = create((set, get) => ({
   isCheckingAuth: true,
   isGoogleLoading: false,
   isVerifying: false,
+  isSendingVerification: false,
   onlineUsers: [],
   socket: null,
 
@@ -129,12 +130,15 @@ export const useAuthStore = create((set, get) => ({
   },
 
   sendVerificationCode: async (data) => {
+    set({ isSendingVerification: true });
     try {
       await axiosInstance.post("/auth/send-verification", data);
       return { success: true };
     } catch (error) {
       console.log("error in send verification:", error);
       throw new Error(error.response?.data?.message || "Failed to send verification code");
+    } finally {
+      set({ isSendingVerification: false });
     }
   },
 

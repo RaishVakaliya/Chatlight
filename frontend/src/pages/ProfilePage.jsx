@@ -202,7 +202,6 @@ const ProfilePage = () => {
                   onClick={() => setIsDeleteModalOpen(true)}
                   className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
                 >
-                  <Trash2 className="w-4 h-4" />
                   Delete Account
                 </button>
               </div>
