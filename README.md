@@ -2,7 +2,7 @@
 
 Highlights:
 
-- Tech stack: MERN + Socket.io + TailwindCSS + Daisy UI + Firebase Google OAuth + Cloudinary 
+- Tech stack: MERN + Socket.io + TailwindCSS + Daisy UI + Firebase Google OAuth + Cloudinary
 - Authentication & Authorization with JWT + Firebase Google OAuth
 - Email verification system with 6-digit codes
 - Real-time messaging with Socket.io
@@ -25,12 +25,13 @@ Highlights:
 MONGODB_URI=...
 PORT=5001
 JWT_SECRET=...
+NODE_ENV=development
 
 CLOUDINARY_CLOUD_NAME=...
 CLOUDINARY_API_KEY=...
 CLOUDINARY_API_SECRET=...
+CLOUDINARY_DEFAULT_AVATAR=
 
-NODE_ENV=development
 
 FIREBASE_PROJECT_ID=...
 FIREBASE_CLIENT_EMAIL=...
@@ -38,6 +39,14 @@ FIREBASE_PRIVATE_KEY=...
 
 EMAIL_USER=...
 EMAIL_PASSWORD=...
+
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+VITE_FIREBASE_MEASUREMENT_ID=
 ```
 
 ### Start the app

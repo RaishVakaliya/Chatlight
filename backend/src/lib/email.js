@@ -1,7 +1,9 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import path from 'path';
 
-dotenv.config();
+const __dirname = path.resolve();
+dotenv.config({ path: path.join(__dirname, "../.env") });
 
 // Create transporter
 const createTransporter = () => {

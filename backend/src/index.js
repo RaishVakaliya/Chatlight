@@ -11,10 +11,10 @@ import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
 import { app, server } from "./lib/socket.js";
 
-dotenv.config();
+const __dirname = path.resolve();
+dotenv.config({ path: path.join(__dirname, "../.env") });
 
 const PORT = process.env.PORT;
-const __dirname = path.resolve();
 
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());

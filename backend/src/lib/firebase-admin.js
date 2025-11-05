@@ -1,7 +1,9 @@
 import admin from 'firebase-admin';
 import dotenv from 'dotenv';
+import path from 'path';
 
-dotenv.config();
+const __dirname = path.resolve();
+dotenv.config({ path: path.join(__dirname, "../.env") });
 
 const serviceAccount = {
   type: "service_account",
