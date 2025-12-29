@@ -38,7 +38,7 @@ export const protectRoute = async (req, res, next) => {
       user.profilePic = process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png";
     }
 
-    console.log("Final profilePic being sent:", user.profilePic);
+    // console.log("Final profilePic being sent:", user.profilePic);
     req.user = user;
 
     next();
