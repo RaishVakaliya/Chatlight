@@ -143,7 +143,16 @@ export const firebaseAuth = async (req, res) => {
 
 export const logout = (req, res) => {
   try {
-    res.cookie("jwt", "", { maxAge: 0 });
+    const isDev = process.env.NODE_ENV === "development";
+
+    // Clear JWT cookie with the same attributes used when setting it
+    res.cookie("jwt", "", {
+      maxAge: 0,
+      httpOnly: true,
+      sameSite: isDev ? "lax" : "none",
+      secure: !isDev,
+    });
+
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     console.log("Error in logout controller", error.message);

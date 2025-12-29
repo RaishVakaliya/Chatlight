@@ -190,8 +190,17 @@ export const sendVerificationEmail = async (email, code, fullName) => {
     console.log('Verification email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('Error sending verification email:', error);
-    throw new Error('Failed to send verification email');
+    // Log full error on the server for debugging
+    console.error('Error sending verification email:', {
+      message: error.message,
+      code: error.code,
+      response: error.response?.body || error.response,
+    });
+    // Re-throw with a more descriptive message that can be sent to client
+    throw new Error(
+      error.message ||
+        'Failed to send verification email. Please check email configuration.'
+    );
   }
 };
 
