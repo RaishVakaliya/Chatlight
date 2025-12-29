@@ -3,19 +3,10 @@ import User from "../models/user.model.js";
 
 export const protectRoute = async (req, res, next) => {
   try {
-    // Debug: Log all cookies received
-    console.log("Cookies received:", req.cookies);
-    console.log("Request origin:", req.headers.origin);
-    console.log("Request headers:", {
-      cookie: req.headers.cookie,
-      origin: req.headers.origin,
-      referer: req.headers.referer,
-    });
-
     const token = req.cookies.jwt;
 
     if (!token) {
-      console.log("No JWT token found in cookies");
+      // 401 is expected when user is not authenticated - don't log it
       return res
         .status(401)
         .json({ message: "Unauthorized - No Token Provided" });
@@ -34,21 +25,9 @@ export const protectRoute = async (req, res, next) => {
     }
 
     // Ensure user always has a profile picture
-    console.log("Profile Picture Debug:", {
-      userId: user._id,
-      originalProfilePic: user.profilePic,
-      profilePicType: typeof user.profilePic,
-      profilePicLength: user.profilePic?.length,
-      isEmpty: !user.profilePic,
-      isEmptyString: user.profilePic === "",
-    });
-
     if (!user.profilePic || user.profilePic.trim() === "") {
-      console.log("Setting default profile picture for user:", user._id);
       user.profilePic = process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png";
     }
-
-    // console.log("Final profilePic being sent:", user.profilePic);
     req.user = user;
 
     next();
