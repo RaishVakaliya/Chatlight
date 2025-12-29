@@ -31,6 +31,11 @@ app.use(
   })
 );
 
+// Simple root route so visiting the Render URL (GET "/") works
+app.get("/", (req, res) => {
+  res.send("Chatlight backend is running");
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
