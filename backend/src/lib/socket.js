@@ -1,14 +1,28 @@
 import { Server } from "socket.io";
 import http from "http";
 import express from "express";
+import dotenv from "dotenv";
+import path from "path";
+
+const __dirname = path.resolve();
+dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 const app = express();
 const server = http.createServer(app);
 
+// Configure CORS origins - support both development and production
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(",").map((url) => url.trim())
+  : ["http://localhost:5173"];
+
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173"],
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ["GET", "POST"],
   },
+  transports: ["websocket", "polling"], // Support both transports for better compatibility
+  allowEIO3: true, // Allow Engine.IO v3 clients
 });
 
 export function getReceiverSocketId(userId) {

@@ -4,8 +4,11 @@ import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 import { signInWithGoogle } from "../services/authService.js";
 
+// Backend URL for Socket.IO connection
 const BASE_URL =
-  import.meta.env.MODE === "development" ? "http://localhost:5001" : "/";
+  import.meta.env.MODE === "development"
+    ? "http://localhost:5001"
+    : import.meta.env.VITE_BACKEND_URL || "";
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -180,6 +183,11 @@ export const useAuthStore = create((set, get) => ({
       query: {
         userId: authUser._id,
       },
+      transports: ["websocket", "polling"], // Support both transports
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
+      withCredentials: true,
     });
     socket.connect();
 
@@ -187,6 +195,10 @@ export const useAuthStore = create((set, get) => ({
 
     socket.on("getOnlineUsers", (userIds) => {
       set({ onlineUsers: userIds });
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
     });
   },
   disconnectSocket: () => {
