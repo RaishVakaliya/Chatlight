@@ -149,6 +149,7 @@ export const logout = (req, res) => {
     res.cookie("jwt", "", {
       maxAge: 0,
       httpOnly: true,
+      path: "/", // Must match the path used when setting the cookie
       sameSite: isDev ? "lax" : "none",
       secure: !isDev,
     });

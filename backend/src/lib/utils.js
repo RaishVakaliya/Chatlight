@@ -7,13 +7,21 @@ export const generateToken = (userId, res) => {
 
   const isDev = process.env.NODE_ENV === "development";
 
-  res.cookie("jwt", token, {
-    maxAge: 7 * 24 * 60 * 60 * 1000, // MS
-    httpOnly: true, // prevent XSS attacks cross-site scripting attacks
+  const cookieOptions = {
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    httpOnly: true, // prevent XSS attacks
+    path: "/", // Ensure cookie is available for all paths
     // In production we're on a different domain (Vercel ↔ Render), so we need SameSite=None + Secure
     sameSite: isDev ? "lax" : "none",
-    secure: !isDev,
+    secure: !isDev, // Must be true in production for SameSite=None
+  };
+
+  console.log("Setting JWT cookie with options:", {
+    ...cookieOptions,
+    token: token.substring(0, 20) + "...", // Log only first 20 chars for security
   });
+
+  res.cookie("jwt", token, cookieOptions);
 
   return token;
 };
