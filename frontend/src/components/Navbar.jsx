@@ -110,7 +110,7 @@ const Navbar = () => {
           <div className="flex items-center gap-8">
             <Link
               to="/"
-              className="flex items-center gap-2.5 hover:opacity-80 transition-all select-none"
+              className="flex items-center gap-2.5 transition-all select-none"
             >
               <div className="size-16 rounded-lg flex items-center justify-center">
                 <img src={logo} alt="Chatlight Logo" />

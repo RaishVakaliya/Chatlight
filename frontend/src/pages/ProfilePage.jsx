@@ -12,7 +12,6 @@ const ProfilePage = () => {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -176,7 +175,7 @@ const ProfilePage = () => {
           </div>
 
           <div className="mt-6 bg-base-300 rounded-xl p-6">
-            <h2 className="text-lg font-medium  mb-4">Account Information</h2>
+            <h2 className="text-lg font-medium mb-4">Account Information</h2>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between py-2 border-b border-zinc-700">
                 <span>Member Since</span>
@@ -197,16 +196,12 @@ const ProfilePage = () => {
 
           {/* Danger Zone */}
           <div className="mt-8 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6">
-            <h2 className="text-lg font-medium text-red-800 dark:text-red-200 mb-4">
-              Danger Zone
-            </h2>
+            <h2 className="text-lg font-medium mb-4">Danger Zone</h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between py-3 border-b border-red-200 dark:border-red-800">
                 <div>
-                  <h3 className="font-medium text-red-800 dark:text-red-200">
-                    Delete Account
-                  </h3>
-                  <p className="text-sm text-red-600 dark:text-red-300 mt-1">
+                  <h3 className="font-medium text-warning">Delete Account</h3>
+                  <p className="text-sm mt-1">
                     Permanently delete your account and remove your profile
                     data. Your messages will remain visible to other users.
                   </p>

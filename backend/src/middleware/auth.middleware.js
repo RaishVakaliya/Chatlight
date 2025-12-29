@@ -24,26 +24,26 @@ export const protectRoute = async (req, res, next) => {
     }
 
     // Ensure user always has a profile picture
-    console.log("🔍 Profile Picture Debug:", {
+    console.log("Profile Picture Debug:", {
       userId: user._id,
       originalProfilePic: user.profilePic,
       profilePicType: typeof user.profilePic,
       profilePicLength: user.profilePic?.length,
       isEmpty: !user.profilePic,
-      isEmptyString: user.profilePic === ""
+      isEmptyString: user.profilePic === "",
     });
-    
+
     if (!user.profilePic || user.profilePic.trim() === "") {
-      console.log("✅ Setting default profile picture for user:", user._id);
+      console.log("Setting default profile picture for user:", user._id);
       user.profilePic = process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png";
     }
-    
-    console.log("📤 Final profilePic being sent:", user.profilePic);
+
+    console.log("Final profilePic being sent:", user.profilePic);
     req.user = user;
 
     next();
   } catch (error) {
     console.log("Error in protectRoute middleware: ", error.message);
-      res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };

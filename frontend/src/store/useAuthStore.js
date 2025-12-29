@@ -22,7 +22,6 @@ export const useAuthStore = create((set, get) => ({
   checkAuth: async () => {
     try {
       const res = await axiosInstance.get("/auth/check");
-      
 
       set({ authUser: res.data });
       get().connectSocket();
@@ -69,6 +68,8 @@ export const useAuthStore = create((set, get) => ({
       const result = await signInWithGoogle();
 
       if (!result.success) {
+        // If redirect flow has started, don't show an error toast
+        if (result.redirecting) return;
         toast.error(result.error || "Google sign-in failed");
         return;
       }

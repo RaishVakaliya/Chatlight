@@ -79,7 +79,7 @@ const SignUpPage = () => {
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
       {/* left side */}
-      <div className="flex flex-col justify-center items-center p-6 sm:p-12">
+      <div className="flex flex-col justify-center items-center pt-16 px-6 sm:px-16 sm:pt-16 sm:pb-2">
         <div className="w-full max-w-md space-y-8">
           {/* LOGO */}
           <div className="text-center mb-8">
@@ -88,7 +88,7 @@ const SignUpPage = () => {
                 {/* <MessageSquare className="size-6 text-primary" /> */}
                 <img src={logo} alt="Chatlight Logo" />
               </div>
-              <h1 className="text-2xl font-bold mt-2">Create Account</h1>
+              <h1 className="text-2xl font-bold mt-0">Create Account</h1>
               <p className="text-base-content/60">
                 Get started with your free account
               </p>
@@ -214,11 +214,12 @@ const SignUpPage = () => {
       </div>
 
       {/* right side */}
-
-      <AuthImagePattern
-        title="Join our community"
-        subtitle="Connect with friends, share moments, and stay in touch with your loved ones."
-      />
+      <div className="pt-14">
+        <AuthImagePattern
+          title="Join our community"
+          subtitle="Connect with friends, share moments, and stay in touch with your loved ones."
+        />
+      </div>
 
       {/* Email Verification Modal */}
       {showVerification && (

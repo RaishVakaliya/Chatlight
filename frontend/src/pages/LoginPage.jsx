@@ -21,18 +21,18 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="h-screen grid lg:grid-cols-2">
+    <div className="min-h-screen grid lg:grid-cols-2">
       {/* Left Side - Form */}
-      <div className="flex flex-col justify-center items-center p-6 sm:p-12">
+      <div className="flex flex-col justify-center items-center pt-16 px-6 sm:pt-4 sm:px-16 sm:pb-0">
         <div className="w-full max-w-md space-y-8">
           {/* Logo */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-0">
             <div className="flex flex-col items-center gap-2 group">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center transition-colors">
                 {/* <MessageSquare className="w-6 h-6 text-primary" /> */}
                 <img src={logo} alt="Chatlight Logo" />
               </div>
-              <h1 className="text-2xl font-bold mt-2">Welcome Back</h1>
+              <h1 className="text-2xl font-bold mt-0">Welcome Back</h1>
               <p className="text-base-content/60">Sign in to your account</p>
             </div>
           </div>
@@ -132,12 +132,14 @@ const LoginPage = () => {
       </div>
 
       {/* Right Side - Image/Pattern */}
-      <AuthImagePattern
-        title={"Welcome back!"}
-        subtitle={
-          "Sign in to continue your conversations and catch up with your messages."
-        }
-      />
+      <div className="pt-14">
+        <AuthImagePattern
+          title={"Welcome back!"}
+          subtitle={
+            "Sign in to continue your conversations and catch up with your messages."
+          }
+        />
+      </div>
     </div>
   );
 };
