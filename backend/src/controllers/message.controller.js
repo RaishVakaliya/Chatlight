@@ -21,10 +21,11 @@ export const getUsersForSidebar = async (req, res) => {
     const usersWithChatHistory2 = await Message.distinct("receiverId", {
       senderId: loggedInUserId,
     });
-    
+
     // Combine both arrays and remove current user
-    const chatPartnerIds = [...new Set([...usersWithChatHistory, ...usersWithChatHistory2])]
-      .filter(id => id.toString() !== loggedInUserId.toString());
+    const chatPartnerIds = [
+      ...new Set([...usersWithChatHistory, ...usersWithChatHistory2]),
+    ].filter((id) => id.toString() !== loggedInUserId.toString());
 
     // Get deleted users who have chat history
     const deletedUsersWithHistory = await User.find({
@@ -57,7 +58,8 @@ export const getUsersForSidebar = async (req, res) => {
           ? {
               ...user._doc,
               fullName: "Chatlight User",
-              profilePic: process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png",
+              profilePic:
+                process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png",
               description: "",
             }
           : user._doc;

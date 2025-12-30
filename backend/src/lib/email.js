@@ -1,6 +1,6 @@
-import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
-import path from 'path';
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+import path from "path";
 
 const __dirname = path.resolve();
 dotenv.config({ path: path.join(__dirname, "../.env") });
@@ -8,7 +8,7 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
 // Create transporter
 const createTransporter = () => {
   return nodemailer.createTransport({
-    service: 'gmail',
+    service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
@@ -27,11 +27,11 @@ export const sendVerificationEmail = async (email, code, fullName) => {
 
   const mailOptions = {
     from: {
-      name: 'Chatlight',
+      name: "Chatlight",
       address: process.env.EMAIL_USER,
     },
     to: email,
-    subject: 'Verify Your Email Address - Chatlight',
+    subject: "Verify Your Email Address - Chatlight",
     html: `
       <!DOCTYPE html>
       <html>
@@ -187,11 +187,11 @@ export const sendVerificationEmail = async (email, code, fullName) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('Verification email sent:', info.messageId);
+    console.log("Verification email sent:", info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     // Log full error on the server for debugging
-    console.error('Error sending verification email:', {
+    console.error("Error sending verification email:", {
       message: error.message,
       code: error.code,
       response: error.response?.body || error.response,
@@ -199,7 +199,7 @@ export const sendVerificationEmail = async (email, code, fullName) => {
     // Re-throw with a more descriptive message that can be sent to client
     throw new Error(
       error.message ||
-        'Failed to send verification email. Please check email configuration.'
+        "Failed to send verification email. Please check email configuration."
     );
   }
 };
@@ -210,11 +210,11 @@ export const sendWelcomeEmail = async (email, fullName) => {
 
   const mailOptions = {
     from: {
-      name: 'Chatlight',
+      name: "Chatlight",
       address: process.env.EMAIL_USER,
     },
     to: email,
-    subject: 'Welcome to Chatlight!',
+    subject: "Welcome to Chatlight!",
     html: `
       <!DOCTYPE html>
       <html>
@@ -363,10 +363,10 @@ export const sendWelcomeEmail = async (email, fullName) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('Welcome email sent:', info.messageId);
+    console.log("Welcome email sent:", info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('Error sending welcome email:', error);
+    console.error("Error sending welcome email:", error);
     // Don't throw error for welcome email as it's not critical
     return { success: false, error: error.message };
   }

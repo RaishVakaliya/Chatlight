@@ -4,7 +4,11 @@ import bcrypt from "bcryptjs";
 import cloudinary from "../lib/cloudinary.js";
 import { io } from "../lib/socket.js";
 import { verifyFirebaseToken } from "../middleware/firebase-auth.middleware.js";
-import { generateVerificationCode, sendVerificationEmail, sendWelcomeEmail } from "../lib/email.js";
+import {
+  generateVerificationCode,
+  sendVerificationEmail,
+  sendWelcomeEmail,
+} from "../lib/email.js";
 
 export const signup = async (req, res) => {
   const { fullName, email, password } = req.body;
@@ -14,14 +18,16 @@ export const signup = async (req, res) => {
     }
 
     // Find verified user
-    const user = await User.findOne({ 
-      email, 
+    const user = await User.findOne({
+      email,
       emailVerified: true,
-      verificationCode: { $exists: false }
+      verificationCode: { $exists: false },
     });
 
     if (!user) {
-      return res.status(400).json({ message: "Please verify your email first" });
+      return res
+        .status(400)
+        .json({ message: "Please verify your email first" });
     }
 
     // Generate token and complete signup
@@ -39,7 +45,10 @@ export const signup = async (req, res) => {
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
-      profilePic: user.profilePic || process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png",
+      profilePic:
+        user.profilePic ||
+        process.env.CLOUDINARY_DEFAULT_AVATAR ||
+        "/avatar.png",
       description: user.description,
     });
   } catch (error) {
@@ -68,7 +77,10 @@ export const login = async (req, res) => {
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
-      profilePic: user.profilePic || process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png",
+      profilePic:
+        user.profilePic ||
+        process.env.CLOUDINARY_DEFAULT_AVATAR ||
+        "/avatar.png",
     });
   } catch (error) {
     console.log("Error in login controller", error.message);
@@ -78,7 +90,7 @@ export const login = async (req, res) => {
 
 export const firebaseAuth = async (req, res) => {
   const { idToken } = req.body;
-  
+
   try {
     if (!idToken) {
       return res.status(400).json({ message: "Firebase ID token is required" });
@@ -86,7 +98,7 @@ export const firebaseAuth = async (req, res) => {
 
     // Verify the Firebase ID token
     const result = await verifyFirebaseToken(idToken);
-    
+
     if (!result.success) {
       return res.status(401).json({ message: "Invalid Firebase token" });
     }
@@ -96,19 +108,20 @@ export const firebaseAuth = async (req, res) => {
 
     // Check if user already exists by Firebase UID
     let user = await User.findOne({ firebaseUid: uid });
-    
+
     if (!user) {
       // Check if user exists by email (for migration from email/password)
       user = await User.findOne({ email: email });
-      
+
       if (user) {
         // Update existing user with Firebase data
         user.firebaseUid = uid;
         user.emailVerified = email_verified;
-        user.authProvider = 'google';
+        user.authProvider = "google";
         // Set profile picture from Google or use default
         if (!user.profilePic) {
-          user.profilePic = picture || process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png";
+          user.profilePic =
+            picture || process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png";
         }
         await user.save();
       } else {
@@ -116,10 +129,11 @@ export const firebaseAuth = async (req, res) => {
         user = new User({
           firebaseUid: uid,
           email: email,
-          fullName: name || email.split('@')[0],
-          profilePic: picture || process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png",
+          fullName: name || email.split("@")[0],
+          profilePic:
+            picture || process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png",
           emailVerified: email_verified,
-          authProvider: 'google'
+          authProvider: "google",
         });
         await user.save();
       }
@@ -132,7 +146,10 @@ export const firebaseAuth = async (req, res) => {
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
-      profilePic: user.profilePic || process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png",
+      profilePic:
+        user.profilePic ||
+        process.env.CLOUDINARY_DEFAULT_AVATAR ||
+        "/avatar.png",
       description: user.description,
     });
   } catch (error) {
@@ -175,10 +192,20 @@ export const updateProfile = async (req, res) => {
       } catch (cloudinaryError) {
         console.log("Cloudinary upload error:", cloudinaryError);
         // Check if it's a file size error
-        if (cloudinaryError.message && cloudinaryError.message.includes('File size too large')) {
-          return res.status(400).json({ message: "File size too large. Please select an image smaller than 10MB." });
+        if (
+          cloudinaryError.message &&
+          cloudinaryError.message.includes("File size too large")
+        ) {
+          return res
+            .status(400)
+            .json({
+              message:
+                "File size too large. Please select an image smaller than 10MB.",
+            });
         }
-        return res.status(400).json({ message: "Failed to upload image. Please try again." });
+        return res
+          .status(400)
+          .json({ message: "Failed to upload image. Please try again." });
       }
     }
 
@@ -208,8 +235,13 @@ export const updateProfile = async (req, res) => {
   } catch (error) {
     console.log("error in update profile:", error);
     // Check if it's a payload too large error from Express
-    if (error.type === 'entity.too.large') {
-      return res.status(413).json({ message: "File size too large. Please select an image smaller than 10MB." });
+    if (error.type === "entity.too.large") {
+      return res
+        .status(413)
+        .json({
+          message:
+            "File size too large. Please select an image smaller than 10MB.",
+        });
     }
     res.status(500).json({ message: "Internal server error" });
   }
@@ -269,7 +301,9 @@ export const sendVerificationCode = async (req, res) => {
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters" });
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters" });
     }
 
     // Check if user already exists
@@ -306,9 +340,9 @@ export const sendVerificationCode = async (req, res) => {
     // Send verification email
     await sendVerificationEmail(email, verificationCode, fullName);
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: "Verification code sent to your email",
-      email: email 
+      email: email,
     });
   } catch (error) {
     console.log("Error in sendVerificationCode controller", error.message);
@@ -320,17 +354,21 @@ export const verifyEmail = async (req, res) => {
   const { email, code } = req.body;
   try {
     if (!email || !code) {
-      return res.status(400).json({ message: "Email and verification code are required" });
+      return res
+        .status(400)
+        .json({ message: "Email and verification code are required" });
     }
 
-    const user = await User.findOne({ 
+    const user = await User.findOne({
       email,
       verificationCode: code,
-      verificationCodeExpires: { $gt: new Date() }
+      verificationCodeExpires: { $gt: new Date() },
     });
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid or expired verification code" });
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired verification code" });
     }
 
     // Mark email as verified and clear verification code
@@ -355,7 +393,9 @@ export const resendVerificationCode = async (req, res) => {
 
     const user = await User.findOne({ email, emailVerified: false });
     if (!user) {
-      return res.status(400).json({ message: "User not found or already verified" });
+      return res
+        .status(400)
+        .json({ message: "User not found or already verified" });
     }
 
     // Generate new verification code

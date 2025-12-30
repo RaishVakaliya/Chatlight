@@ -1,4 +1,8 @@
-import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
+import {
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+} from "firebase/auth";
 import { auth, googleProvider } from "../lib/firebase";
 
 export const signInWithGoogle = async () => {
@@ -42,9 +46,9 @@ export const signInWithGoogle = async () => {
     console.error("Google sign-in error:", error);
     // Fallback to redirect for popup-related errors
     const popupErrors = [
-      'auth/popup-closed-by-user',
-      'auth/cancelled-popup-request',
-      'auth/popup-blocked',
+      "auth/popup-closed-by-user",
+      "auth/cancelled-popup-request",
+      "auth/popup-blocked",
     ];
     if (popupErrors.includes(error?.code)) {
       // Start redirect flow (page will navigate)
