@@ -2,6 +2,7 @@ import { useRef, useState, forwardRef, useImperativeHandle } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
+import { isMobileDevice } from "../lib/utils";
 
 const MessageInput = forwardRef((props, ref) => {
   const [text, setText] = useState("");
@@ -13,6 +14,9 @@ const MessageInput = forwardRef((props, ref) => {
 
   useImperativeHandle(ref, () => ({
     focus: () => {
+      // Skip auto-focus on mobile devices
+      if (isMobileDevice()) return;
+
       // Use requestAnimationFrame to ensure DOM is ready
       requestAnimationFrame(() => {
         if (textInputRef.current) {
@@ -20,7 +24,7 @@ const MessageInput = forwardRef((props, ref) => {
           // Also set cursor to end of text if there's any
           textInputRef.current.setSelectionRange(
             textInputRef.current.value.length,
-            textInputRef.current.value.length
+            textInputRef.current.value.length,
           );
         }
       });

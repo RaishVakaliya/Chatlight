@@ -1,6 +1,7 @@
 import { THEMES } from "../constants";
 import { useThemeStore } from "../store/useThemeStore";
 import { Send } from "lucide-react";
+import Footer from "../components/Footer";
 
 const PREVIEW_MESSAGES = [
   { id: 1, content: "Hey! How's it going?", isSent: false },
@@ -16,14 +17,15 @@ const SettingsPage = () => {
   const { theme, setTheme } = useThemeStore();
 
   return (
-    <div className="min-h-screen mx-auto px-4 pt-20 pb-8 max-w-5xl">
-      <div className="space-y-6">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-lg font-semibold">Theme</h2>
-          <p className="text-sm text-base-content/70">
-            Choose a theme for your chat interface
-          </p>
-        </div>
+    <>
+      <div className="min-h-screen mx-auto px-4 pt-20 pb-[22px] sm:pb-[24px] max-w-5xl">
+        <div className="space-y-6">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-lg font-semibold">Theme</h2>
+            <p className="text-sm text-base-content/70">
+              Choose a theme for your chat interface
+            </p>
+          </div>
 
         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
           {THEMES.map((t) => (
@@ -130,8 +132,10 @@ const SettingsPage = () => {
             </div>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 };
 export default SettingsPage;

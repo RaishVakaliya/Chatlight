@@ -4,6 +4,7 @@ import { Camera, Mail, User, FileText, Save, Trash2 } from "lucide-react";
 import DeleteAccountModal from "../components/DeleteAccountModal";
 import toast from "react-hot-toast";
 import { getProfilePicture } from "../lib/utils";
+import Footer from "../components/Footer";
 
 const ProfilePage = () => {
   const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
@@ -57,8 +58,9 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen pt-20">
-      <div className="max-w-2xl mx-auto p-4 py-8">
+    <>
+      <div className="min-h-screen pt-20 pb-[22px] sm:pb-[24px]">
+        <div className="max-w-2xl mx-auto p-4 py-8">
         <div className="bg-base-300 rounded-xl p-6 space-y-8">
           <div className="text-center">
             <h1 className="text-2xl font-semibold ">Profile</h1>
@@ -222,8 +224,10 @@ const ProfilePage = () => {
           isOpen={isDeleteModalOpen}
           onClose={() => setIsDeleteModalOpen(false)}
         />
+        </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 };
 export default ProfilePage;

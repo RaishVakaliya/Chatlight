@@ -24,7 +24,10 @@ const PinnedMessages = ({ selectedUser }) => {
   // Handle outside click to close expanded pinned messages
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (pinnedMessagesRef.current && !pinnedMessagesRef.current.contains(event.target)) {
+      if (
+        pinnedMessagesRef.current &&
+        !pinnedMessagesRef.current.contains(event.target)
+      ) {
         setIsExpanded(false);
       }
     };
@@ -33,12 +36,12 @@ const PinnedMessages = ({ selectedUser }) => {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
-    return () => {``
+    return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isExpanded]);
 
-  if (!pinnedMessages.length && !isPinnedMessagesLoading) {
+  if (!pinnedMessages.length) {
     return null;
   }
 
@@ -49,7 +52,7 @@ const PinnedMessages = ({ selectedUser }) => {
 
   const scrollToMessage = (messageId) => {
     const messageElement = document.querySelector(
-      `[data-message-id="${messageId}"]`
+      `[data-message-id="${messageId}"]`,
     );
     if (messageElement) {
       messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -58,14 +61,17 @@ const PinnedMessages = ({ selectedUser }) => {
       setTimeout(() => {
         messageElement.classList.remove(
           "bg-yellow-100",
-          "dark:bg-yellow-900/30"
+          "dark:bg-yellow-900/30",
         );
       }, 2000);
     }
   };
 
   return (
-    <div ref={pinnedMessagesRef} className="bg-base-200 border-b border-base-300">
+    <div
+      ref={pinnedMessagesRef}
+      className="bg-base-200 border-b border-base-300"
+    >
       {/* Header */}
       <div
         className="flex items-center justify-between p-3 cursor-pointer hover:bg-base-300 transition-colors"

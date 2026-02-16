@@ -48,7 +48,7 @@ const Sidebar = () => {
     (user) => {
       setSelectedUser(user);
     },
-    [setSelectedUser]
+    [setSelectedUser],
   );
 
   if (isUsersLoading) return <SidebarSkeleton />;
@@ -96,7 +96,7 @@ const Sidebar = () => {
         </div>
       </div>
 
-      <div className="overflow-y-auto w-full py-3">
+      <div className="overflow-y-auto w-full py-3 scrollbar-hide">
         {filteredUsers.map((user) => (
           <UserItem
             key={user._id}

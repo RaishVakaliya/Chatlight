@@ -13,7 +13,7 @@ import DeleteMessageModal from "./DeleteMessageModal";
 import ReplyPreview from "./ReplyPreview";
 import ReplyMessage from "./ReplyMessage";
 import { useAuthStore } from "../store/useAuthStore";
-import { formatMessageTime } from "../lib/utils";
+import { formatMessageTime, isMobileDevice } from "../lib/utils";
 
 const ChatContainer = () => {
   const {
@@ -40,7 +40,7 @@ const ChatContainer = () => {
 
   const scrollToMessage = (messageId) => {
     const messageElement = document.querySelector(
-      `[data-message-id="${messageId}"]`
+      `[data-message-id="${messageId}"]`,
     );
     if (messageElement) {
       messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -49,7 +49,7 @@ const ChatContainer = () => {
       setTimeout(() => {
         messageElement.classList.remove(
           "bg-yellow-100",
-          "dark:bg-yellow-900/30"
+          "dark:bg-yellow-900/30",
         );
       }, 2000);
     }
@@ -60,21 +60,24 @@ const ChatContainer = () => {
 
     subscribeToMessages();
 
-    // Focus the message input when opening a chat with improved timing
-    const focusInput = () => {
-      if (messageInputRef.current?.focus) {
-        messageInputRef.current.focus();
-      }
-    };
+    // Focus the message input when opening a chat with improved timing (skip on mobile)
+    let focusTimeout1, focusTimeout2;
+    if (!isMobileDevice()) {
+      const focusInput = () => {
+        if (messageInputRef.current?.focus) {
+          messageInputRef.current.focus();
+        }
+      };
 
-    // Use multiple timeouts to ensure focus works reliably
-    const focusTimeout1 = setTimeout(focusInput, 100);
-    const focusTimeout2 = setTimeout(focusInput, 300);
+      // Use multiple timeouts to ensure focus works reliably
+      focusTimeout1 = setTimeout(focusInput, 100);
+      focusTimeout2 = setTimeout(focusInput, 300);
+    }
 
     return () => {
       unsubscribeFromMessages();
-      clearTimeout(focusTimeout1);
-      clearTimeout(focusTimeout2);
+      if (focusTimeout1) clearTimeout(focusTimeout1);
+      if (focusTimeout2) clearTimeout(focusTimeout2);
     };
   }, [
     selectedUser._id,
@@ -107,7 +110,7 @@ const ChatContainer = () => {
 
   const handleConfirmDelete = async () => {
     if (!messageToDelete) return;
-    
+
     setIsDeleting(true);
     try {
       await deleteMessage(messageToDelete._id);
@@ -166,9 +169,9 @@ const ChatContainer = () => {
     }
   }, [messages.length]);
 
-  // Focus input after messages are loaded
+  // Focus input after messages are loaded (skip on mobile)
   useEffect(() => {
-    if (!isMessagesLoading && messages) {
+    if (!isMobileDevice() && !isMessagesLoading && messages) {
       setTimeout(() => {
         if (messageInputRef.current?.focus) {
           messageInputRef.current.focus();
@@ -336,7 +339,7 @@ const ChatContainer = () => {
                         <div className="flex items-end gap-2 whitespace-pre-wrap break-all break-words">
                           <p className="flex-1">{message.text}</p>
                           {message.edited && (
-                            <span className="text-xs text-base-content/50 italic whitespace-nowrap">
+                            <span className="text-xs text-zinc-500 italic whitespace-nowrap">
                               edited
                             </span>
                           )}
