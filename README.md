@@ -6,7 +6,7 @@ Highlights:
 - Authentication & Authorization with JWT + Firebase Google OAuth
 - Email verification system with 6-digit codes
 - Real-time messaging with Socket.io
-- Message pinning functionality (like WhatsApp)
+- Message pinning functionality
 - Message replies with context display
 - Online user status (real-time)
 - Profile management with instant updates
@@ -14,9 +14,5 @@ Highlights:
 - Mobile-responsive design with modern UI
 - Image sharing with Cloudinary integration
 - Professional email templates (verification & welcome)
-- Comprehensive error handling
 - Account deletion functionality
 - And much more!
-
-todo: remove pin message header after loading.
-footer for settings and Profile: contact admin for any help or inquiry
