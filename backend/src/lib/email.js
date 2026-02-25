@@ -62,15 +62,12 @@ export const sendVerificationEmail = async (email, code, fullName) => {
           .logo {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #ff6b35, #f7931e);
             border-radius: 12px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 20px;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
+            overflow: hidden;
           }
           .title {
             color: #2d3748;
@@ -143,7 +140,13 @@ export const sendVerificationEmail = async (email, code, fullName) => {
       <body>
         <div class="container">
           <div class="header">
-            <div class="logo">C</div>
+            <div class="logo">
+              <img 
+                src="${process.env.CLOUDINARY_APP_LOGO || process.env.CLOUDINARY_DEFAULT_AVATAR || "https://via.placeholder.com/60"}" 
+                alt="Chatlight Logo" 
+                style="width: 100%; height: 100%; object-fit: cover; display: block;"
+              />
+            </div>
             <h1 class="title">Verify Your Email Address</h1>
             <p class="subtitle">Hi ${fullName}, welcome to Chatlight!</p>
           </div>
@@ -199,7 +202,7 @@ export const sendVerificationEmail = async (email, code, fullName) => {
     // Re-throw with a more descriptive message that can be sent to client
     throw new Error(
       error.message ||
-        "Failed to send verification email. Please check email configuration."
+        "Failed to send verification email. Please check email configuration.",
     );
   }
 };
@@ -308,7 +311,13 @@ export const sendWelcomeEmail = async (email, fullName) => {
       <body>
         <div class="container">
           <div class="header">
-            <div class="logo">C</div>
+            <div class="logo">
+              <img 
+                src="${process.env.CLOUDINARY_APP_LOGO || process.env.CLOUDINARY_DEFAULT_AVATAR || "https://via.placeholder.com/60"}" 
+                alt="Chatlight Logo" 
+                style="width: 100%; height: 100%; object-fit: cover; display: block;"
+              />
+            </div>
             <h1 class="title">Welcome to Chatlight!</h1>
             <p class="subtitle">Your account has been successfully verified</p>
           </div>
