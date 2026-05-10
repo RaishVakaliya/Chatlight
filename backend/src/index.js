@@ -36,9 +36,17 @@ app.use(
 
       const isAllowed = allowedOrigins.some((allowedOrigin) => {
         if (allowedOrigin === origin) return true;
+
         if (allowedOrigin.includes("*")) {
+          const parts = allowedOrigin.split("*");
+          if (parts.length === 2) {
+            const matches =
+              origin.startsWith(parts[0]) && origin.endsWith(parts[1]);
+            if (matches) return true;
+          }
+
           const pattern = allowedOrigin
-            .replace(/\./g, "\\.")
+            .replace(/[.+^${}()|[\]\\]/g, "\\$&")
             .replace(/\*/g, ".*");
           const regex = new RegExp(`^${pattern}$`);
           return regex.test(origin);
@@ -50,7 +58,7 @@ app.use(
         callback(null, true);
       } else {
         console.log("CORS blocked origin:", origin);
-        console.log("Allowed origins:", allowedOrigins);
+        console.log("Allowed origins list:", allowedOrigins);
         callback(new Error(`Origin ${origin} not allowed by CORS`));
       }
     },

@@ -23,9 +23,17 @@ const io = new Server(server, {
 
       const isAllowed = allowedOrigins.some((allowedOrigin) => {
         if (allowedOrigin === origin) return true;
+
         if (allowedOrigin.includes("*")) {
+          const parts = allowedOrigin.split("*");
+          if (parts.length === 2) {
+            const matches =
+              origin.startsWith(parts[0]) && origin.endsWith(parts[1]);
+            if (matches) return true;
+          }
+
           const pattern = allowedOrigin
-            .replace(/\./g, "\\.")
+            .replace(/[.+^${}()|[\]\\]/g, "\\$&")
             .replace(/\*/g, ".*");
           const regex = new RegExp(`^${pattern}$`);
           return regex.test(origin);
@@ -36,6 +44,7 @@ const io = new Server(server, {
       if (isAllowed) {
         callback(null, true);
       } else {
+        console.log("Socket CORS blocked origin:", origin);
         callback(new Error(`Origin ${origin} not allowed by CORS`));
       }
     },
