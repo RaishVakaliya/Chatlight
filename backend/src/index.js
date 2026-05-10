@@ -19,6 +19,17 @@ const PORT = process.env.PORT || 5001;
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === "production") {
+    console.log(
+      `[DEBUG] ${req.method} ${req.url} - Cookies: ${req.cookies ? Object.keys(req.cookies).join(", ") : "none"}`,
+    );
+  } else {
+    console.log(`[DEBUG] ${req.method} ${req.url} - Cookies:`, req.cookies);
+  }
+  next();
+});
+
 const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(",").map((url) => url.trim())
   : ["http://localhost:5173"];
