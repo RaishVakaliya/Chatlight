@@ -16,7 +16,29 @@ const allowedOrigins = process.env.FRONTEND_URL
 
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      const isAllowed = allowedOrigins.some((allowedOrigin) => {
+        if (allowedOrigin === origin) return true;
+        if (allowedOrigin.includes("*")) {
+          const pattern = allowedOrigin
+            .replace(/\./g, "\\.")
+            .replace(/\*/g, ".*");
+          const regex = new RegExp(`^${pattern}$`);
+          return regex.test(origin);
+        }
+        return false;
+      });
+
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST"],
   },
