@@ -17,7 +17,6 @@ export const signup = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Find verified user
     const user = await User.findOne({
       email,
       emailVerified: true,
@@ -30,15 +29,12 @@ export const signup = async (req, res) => {
         .json({ message: "Please verify your email first" });
     }
 
-    // Generate token and complete signup
     generateToken(user._id, res);
 
-    // Send welcome email
     try {
       await sendWelcomeEmail(email, user.fullName);
     } catch (emailError) {
       console.log("Welcome email failed:", emailError.message);
-      // Don't fail signup if welcome email fails
     }
 
     res.status(201).json({
@@ -60,10 +56,21 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   const { email, password } = req.body;
   try {
+    if (!email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
     const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    if (!user.password) {
+      return res.status(400).json({
+        message:
+          "This account was created with Google. Please use Google login.",
+      });
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
@@ -96,7 +103,6 @@ export const firebaseAuth = async (req, res) => {
       return res.status(400).json({ message: "Firebase ID token is required" });
     }
 
-    // Verify the Firebase ID token
     const result = await verifyFirebaseToken(idToken);
 
     if (!result.success) {
@@ -106,26 +112,21 @@ export const firebaseAuth = async (req, res) => {
     const { decodedToken } = result;
     const { uid, email, name, picture, email_verified } = decodedToken;
 
-    // Check if user already exists by Firebase UID
     let user = await User.findOne({ firebaseUid: uid });
 
     if (!user) {
-      // Check if user exists by email (for migration from email/password)
       user = await User.findOne({ email: email });
 
       if (user) {
-        // Update existing user with Firebase data
         user.firebaseUid = uid;
         user.emailVerified = email_verified;
         user.authProvider = "google";
-        // Set profile picture from Google or use default
         if (!user.profilePic) {
           user.profilePic =
             picture || process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png";
         }
         await user.save();
       } else {
-        // Create new user
         user = new User({
           firebaseUid: uid,
           email: email,
@@ -139,7 +140,6 @@ export const firebaseAuth = async (req, res) => {
       }
     }
 
-    // Generate JWT token for our app
     generateToken(user._id, res);
 
     res.status(200).json({
@@ -162,11 +162,10 @@ export const logout = (req, res) => {
   try {
     const isDev = process.env.NODE_ENV === "development";
 
-    // Clear JWT cookie with the same attributes used when setting it
     res.cookie("jwt", "", {
       maxAge: 0,
       httpOnly: true,
-      path: "/", // Must match the path used when setting the cookie
+      path: "/",
       sameSite: isDev ? "lax" : "none",
       secure: !isDev,
     });
@@ -191,17 +190,14 @@ export const updateProfile = async (req, res) => {
         updateData.profilePic = uploadResponse.secure_url;
       } catch (cloudinaryError) {
         console.log("Cloudinary upload error:", cloudinaryError);
-        // Check if it's a file size error
         if (
           cloudinaryError.message &&
           cloudinaryError.message.includes("File size too large")
         ) {
-          return res
-            .status(400)
-            .json({
-              message:
-                "File size too large. Please select an image smaller than 10MB.",
-            });
+          return res.status(400).json({
+            message:
+              "File size too large. Please select an image smaller than 10MB.",
+          });
         }
         return res
           .status(400)
@@ -221,7 +217,6 @@ export const updateProfile = async (req, res) => {
       new: true,
     });
 
-    // Emit socket event to all connected users about profile update
     if (updateData.profilePic || updateData.description !== undefined) {
       io.emit("profileUpdated", {
         userId: userId,
@@ -234,14 +229,11 @@ export const updateProfile = async (req, res) => {
     res.status(200).json(updatedUser);
   } catch (error) {
     console.log("error in update profile:", error);
-    // Check if it's a payload too large error from Express
     if (error.type === "entity.too.large") {
-      return res
-        .status(413)
-        .json({
-          message:
-            "File size too large. Please select an image smaller than 10MB.",
-        });
+      return res.status(413).json({
+        message:
+          "File size too large. Please select an image smaller than 10MB.",
+      });
     }
     res.status(500).json({ message: "Internal server error" });
   }
@@ -253,7 +245,6 @@ export const deleteAccount = async (req, res) => {
     const userId = req.user._id;
     const user = req.user;
 
-    // Validate confirmation text (should be "FullName Delete")
     const expectedText = `${user.fullName} Delete`;
     if (confirmationText !== expectedText) {
       return res.status(400).json({
@@ -261,12 +252,10 @@ export const deleteAccount = async (req, res) => {
       });
     }
 
-    // Soft delete the user account (preserve messages)
     await User.findByIdAndUpdate(userId, {
       $set: {
         deleted: true,
         deletedAt: new Date(),
-        // Clear sensitive data but keep basic info for message history
         email: `deleted_${userId}@deleted.com`,
         password: null,
         profilePic: process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png", // Default avatar
@@ -274,7 +263,6 @@ export const deleteAccount = async (req, res) => {
       },
     });
 
-    // Clear the JWT cookie
     res.cookie("jwt", "", { maxAge: 0 });
 
     res.status(200).json({ message: "Account deleted successfully" });
@@ -306,25 +294,21 @@ export const sendVerificationCode = async (req, res) => {
         .json({ message: "Password must be at least 6 characters" });
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser && existingUser.emailVerified) {
       return res.status(400).json({ message: "Email already exists" });
     }
 
-    // Generate verification code
     const verificationCode = generateVerificationCode();
     const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     if (existingUser && !existingUser.emailVerified) {
-      // Update existing unverified user
       existingUser.fullName = fullName;
       existingUser.password = await bcrypt.hash(password, 10);
       existingUser.verificationCode = verificationCode;
       existingUser.verificationCodeExpires = verificationCodeExpires;
       await existingUser.save();
     } else {
-      // Create new user
       const hashedPassword = await bcrypt.hash(password, 10);
       const newUser = new User({
         fullName,
@@ -337,7 +321,6 @@ export const sendVerificationCode = async (req, res) => {
       await newUser.save();
     }
 
-    // Send verification email
     await sendVerificationEmail(email, verificationCode, fullName);
 
     res.status(200).json({
@@ -371,7 +354,6 @@ export const verifyEmail = async (req, res) => {
         .json({ message: "Invalid or expired verification code" });
     }
 
-    // Mark email as verified and clear verification code
     user.emailVerified = true;
     user.verificationCode = undefined;
     user.verificationCodeExpires = undefined;
@@ -398,7 +380,6 @@ export const resendVerificationCode = async (req, res) => {
         .json({ message: "User not found or already verified" });
     }
 
-    // Generate new verification code
     const verificationCode = generateVerificationCode();
     const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
@@ -406,7 +387,6 @@ export const resendVerificationCode = async (req, res) => {
     user.verificationCodeExpires = verificationCodeExpires;
     await user.save();
 
-    // Send verification email
     await sendVerificationEmail(email, verificationCode, user.fullName);
 
     res.status(200).json({ message: "Verification code resent successfully" });
