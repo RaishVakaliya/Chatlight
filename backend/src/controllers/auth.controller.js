@@ -29,7 +29,7 @@ export const signup = async (req, res) => {
         .json({ message: "Please verify your email first" });
     }
 
-    generateToken(user._id, res);
+    const token = generateToken(user._id, res);
 
     try {
       await sendWelcomeEmail(email, user.fullName);
@@ -46,6 +46,7 @@ export const signup = async (req, res) => {
         process.env.CLOUDINARY_DEFAULT_AVATAR ||
         "/avatar.png",
       description: user.description,
+      token,
     });
   } catch (error) {
     console.log("Error in signup controller", error.message);
@@ -78,7 +79,7 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    generateToken(user._id, res);
+    const token = generateToken(user._id, res);
 
     res.status(200).json({
       _id: user._id,
@@ -88,6 +89,7 @@ export const login = async (req, res) => {
         user.profilePic ||
         process.env.CLOUDINARY_DEFAULT_AVATAR ||
         "/avatar.png",
+      token,
     });
   } catch (error) {
     console.log("Error in login controller", error.message);
@@ -140,7 +142,7 @@ export const firebaseAuth = async (req, res) => {
       }
     }
 
-    generateToken(user._id, res);
+    const token = generateToken(user._id, res);
 
     res.status(200).json({
       _id: user._id,
@@ -151,6 +153,7 @@ export const firebaseAuth = async (req, res) => {
         process.env.CLOUDINARY_DEFAULT_AVATAR ||
         "/avatar.png",
       description: user.description,
+      token,
     });
   } catch (error) {
     console.log("Error in Firebase auth controller", error.message);

@@ -61,3 +61,31 @@ export const signInWithGoogle = async () => {
     };
   }
 };
+
+export const checkGoogleRedirect = async () => {
+  try {
+    const redirectResult = await getRedirectResult(auth);
+    if (redirectResult) {
+      const user = redirectResult.user;
+      const idToken = await user.getIdToken();
+      return {
+        success: true,
+        idToken,
+        user: {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          emailVerified: user.emailVerified,
+        },
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error("Error checking Google redirect:", error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
-import { signInWithGoogle } from "../services/authService.js";
+import { signInWithGoogle, checkGoogleRedirect } from "../services/authService.js";
 
 // Backend URL for Socket.IO connection
 const BASE_URL =
@@ -24,8 +24,26 @@ export const useAuthStore = create((set, get) => ({
 
   checkAuth: async () => {
     try {
-      const res = await axiosInstance.get("/auth/check");
+      // Check if we are returning from Google OAuth Redirect flow
+      const redirectResult = await checkGoogleRedirect();
+      if (redirectResult) {
+        if (redirectResult.success) {
+          set({ isGoogleLoading: true });
+          const res = await axiosInstance.post("/auth/firebase-auth", {
+            idToken: redirectResult.idToken,
+          });
+          if (res.data.token) localStorage.setItem("jwt", res.data.token);
+          set({ authUser: res.data });
+          toast.success("Signed in with Google successfully");
+          get().connectSocket();
+          return;
+        } else if (redirectResult.error) {
+          console.error("Google redirect sign-in error:", redirectResult.error);
+          toast.error(redirectResult.error);
+        }
+      }
 
+      const res = await axiosInstance.get("/auth/check");
       set({ authUser: res.data });
       get().connectSocket();
     } catch (error) {
@@ -36,6 +54,7 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: null });
     } finally {
       set({ isCheckingAuth: false });
+      set({ isGoogleLoading: false });
     }
   },
 
@@ -43,6 +62,7 @@ export const useAuthStore = create((set, get) => ({
     set({ isSigningUp: true });
     try {
       const res = await axiosInstance.post("/auth/signup", data);
+      if (res.data.token) localStorage.setItem("jwt", res.data.token);
       set({ authUser: res.data });
       toast.success("Account created successfully");
       get().connectSocket();
@@ -57,6 +77,7 @@ export const useAuthStore = create((set, get) => ({
     set({ isLoggingIn: true });
     try {
       const res = await axiosInstance.post("/auth/login", data);
+      if (res.data.token) localStorage.setItem("jwt", res.data.token);
       set({ authUser: res.data });
       toast.success("Logged in successfully");
 
@@ -85,6 +106,7 @@ export const useAuthStore = create((set, get) => ({
         idToken: result.idToken,
       });
 
+      if (res.data.token) localStorage.setItem("jwt", res.data.token);
       set({ authUser: res.data });
       toast.success("Signed in with Google successfully");
       get().connectSocket();
@@ -99,6 +121,7 @@ export const useAuthStore = create((set, get) => ({
   logout: async () => {
     try {
       await axiosInstance.post("/auth/logout");
+      localStorage.removeItem("jwt");
       set({ authUser: null });
       toast.success("Logged out successfully");
       get().disconnectSocket();
@@ -126,6 +149,7 @@ export const useAuthStore = create((set, get) => ({
       await axiosInstance.delete("/auth/delete-account", {
         data: { confirmationText },
       });
+      localStorage.removeItem("jwt");
       set({ authUser: null });
       get().disconnectSocket();
       toast.success("Account deleted successfully");
@@ -145,7 +169,7 @@ export const useAuthStore = create((set, get) => ({
     } catch (error) {
       console.log("error in send verification:", error);
       throw new Error(
-        error.response?.data?.message || "Failed to send verification code"
+        error.response?.data?.message || "Failed to send verification code",
       );
     } finally {
       set({ isSendingVerification: false });
