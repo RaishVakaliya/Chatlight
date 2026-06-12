@@ -168,6 +168,7 @@ export const logout = (req, res) => {
       path: "/",
       sameSite: isDev ? "lax" : "none",
       secure: !isDev,
+      partitioned: !isDev,
     });
 
     res.status(200).json({ message: "Logged out successfully" });
