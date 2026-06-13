@@ -90,9 +90,10 @@ export const useAuthStore = create((set, get) => ({
   },
 
   loginWithGoogle: async () => {
-    set({ isGoogleLoading: true });
     try {
-      const result = await signInWithGoogle();
+      const googlePromise = signInWithGoogle();
+      set({ isGoogleLoading: true });
+      const result = await googlePromise;
 
       if (!result.success) {
         // If redirect flow has started, don't show an error toast

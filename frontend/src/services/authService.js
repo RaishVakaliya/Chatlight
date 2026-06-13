@@ -7,24 +7,6 @@ import { auth, googleProvider } from "../lib/firebase";
 
 export const signInWithGoogle = async () => {
   try {
-    // First, check if we're returning from a redirect flow
-    const redirectResult = await getRedirectResult(auth);
-    if (redirectResult) {
-      const user = redirectResult.user;
-      const idToken = await user.getIdToken();
-      return {
-        success: true,
-        idToken,
-        user: {
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          emailVerified: user.emailVerified,
-        },
-      };
-    }
-
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
 
