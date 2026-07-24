@@ -196,13 +196,11 @@ export const updateProfile = async (req, res) => {
               "File size too large. Please select an image smaller than 10MB.",
           });
         }
-        return res
-          .status(400)
-          .json({
-            message:
-              cloudinaryError.message ||
-              "Failed to upload image. Please try again.",
-          });
+        return res.status(400).json({
+          message:
+            cloudinaryError.message ||
+            "Failed to upload image. Please try again.",
+        });
       }
     }
 
@@ -259,7 +257,7 @@ export const deleteAccount = async (req, res) => {
         deletedAt: new Date(),
         email: `deleted_${userId}@deleted.com`,
         password: null,
-        profilePic: process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png", // Default avatar
+        profilePic: process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png",
         description: "",
       },
     });
@@ -301,7 +299,7 @@ export const sendVerificationCode = async (req, res) => {
     }
 
     const verificationCode = generateVerificationCode();
-    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     if (existingUser && !existingUser.emailVerified) {
       existingUser.fullName = fullName;
@@ -382,7 +380,7 @@ export const resendVerificationCode = async (req, res) => {
     }
 
     const verificationCode = generateVerificationCode();
-    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     user.verificationCode = verificationCode;
     user.verificationCodeExpires = verificationCodeExpires;

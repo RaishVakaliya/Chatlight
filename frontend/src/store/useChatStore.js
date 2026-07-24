@@ -17,6 +17,7 @@ export const useChatStore = create((set, get) => ({
   isPinnedMessagesLoading: false,
 
   getUsers: async () => {
+    if (get().isUsersLoading) return;
     set({ isUsersLoading: true });
     try {
       const res = await axiosInstance.get("/messages/users");
@@ -28,7 +29,7 @@ export const useChatStore = create((set, get) => ({
       ).length;
       set({ unreadChatCount: unreadChatCount });
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Failed to fetch users");
     } finally {
       set({ isUsersLoading: false });
     }
@@ -38,17 +39,25 @@ export const useChatStore = create((set, get) => ({
     set({ isMessagesLoading: true });
     try {
       const res = await axiosInstance.get(`/messages/${userId}`);
+
+      // Guard against race conditions if user selected a different chat while request was inflight
+      if (get().selectedUser?._id !== userId) return;
+
       set({ messages: res.data });
 
       // Mark messages as read in the database
-      await axiosInstance.put(`/messages/read/${userId}`);
+      axiosInstance
+        .put(`/messages/read/${userId}`)
+        .catch((err) => console.error("Failed to mark messages as read:", err));
 
       // Update only the specific user's unread count instead of refreshing all users
       get().updateUserUnreadCount(userId, 0);
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Failed to load messages");
     } finally {
-      set({ isMessagesLoading: false });
+      if (get().selectedUser?._id === userId) {
+        set({ isMessagesLoading: false });
+      }
     }
   },
 
@@ -117,7 +126,7 @@ export const useChatStore = create((set, get) => ({
 
       set({ users: sortedUsers });
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Failed to send message");
     }
   },
 

@@ -5,7 +5,6 @@ export const protectRoute = async (req, res, next) => {
   try {
     let token = req.cookies.jwt;
 
-    // Fallback to Authorization header if cookie is missing
     if (
       !token &&
       req.headers.authorization &&
@@ -15,7 +14,6 @@ export const protectRoute = async (req, res, next) => {
     }
 
     if (!token) {
-      // 401 is expected when user is not authenticated - don't log it
       return res
         .status(401)
         .json({ message: "Unauthorized - No Token Provided" });
@@ -33,7 +31,6 @@ export const protectRoute = async (req, res, next) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Ensure user always has a profile picture
     if (!user.profilePic || user.profilePic.trim() === "") {
       user.profilePic = process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png";
     }

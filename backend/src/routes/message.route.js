@@ -16,16 +16,18 @@ import {
 
 const router = express.Router();
 
-router.get("/users", protectRoute, getUsersForSidebar);
-router.get("/search", protectRoute, searchUsers);
-router.get("/unread", protectRoute, getUnreadMessagesCount);
-router.get("/pinned/:id", protectRoute, getPinnedMessages);
-router.get("/:id", protectRoute, getMessages);
-router.post("/send/:id", protectRoute, sendMessage);
-router.put("/pin/:messageId", protectRoute, pinMessage);
-router.put("/unpin/:messageId", protectRoute, unpinMessage);
-router.put("/read/:senderId", protectRoute, markMessagesAsRead);
-router.put("/edit/:messageId", protectRoute, editMessage);
-router.delete("/delete/:messageId", protectRoute, deleteMessage);
+router.use(protectRoute);
+
+router.get("/users", getUsersForSidebar);
+router.get("/search", searchUsers);
+router.get("/unread", getUnreadMessagesCount);
+router.get("/pinned/:id", getPinnedMessages);
+router.get("/:id", getMessages);
+router.post("/send/:id", sendMessage);
+router.put("/pin/:messageId", pinMessage);
+router.put("/unpin/:messageId", unpinMessage);
+router.put("/read/:senderId", markMessagesAsRead);
+router.put("/edit/:messageId", editMessage);
+router.delete("/delete/:messageId", deleteMessage);
 
 export default router;

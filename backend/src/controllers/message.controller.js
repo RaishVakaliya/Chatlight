@@ -8,61 +8,60 @@ export const getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
 
-    // Get all active users
-    const activeUsers = await User.find({
-      _id: { $ne: loggedInUserId },
-      deleted: { $ne: true },
-    }).select("-password");
+    const [activeUsers, [usersWithChatHistory, usersWithChatHistory2]] =
+      await Promise.all([
+        User.find({
+          _id: { $ne: loggedInUserId },
+          deleted: { $ne: true },
+        })
+          .select("-password")
+          .lean(),
+        Promise.all([
+          Message.distinct("senderId", { receiverId: loggedInUserId }),
+          Message.distinct("receiverId", { senderId: loggedInUserId }),
+        ]),
+      ]);
 
-    // Get deleted users who have chat history with current user
-    const usersWithChatHistory = await Message.distinct("senderId", {
-      receiverId: loggedInUserId,
-    });
-    const usersWithChatHistory2 = await Message.distinct("receiverId", {
-      senderId: loggedInUserId,
-    });
-
-    // Combine both arrays and remove current user
     const chatPartnerIds = [
       ...new Set([...usersWithChatHistory, ...usersWithChatHistory2]),
     ].filter((id) => id.toString() !== loggedInUserId.toString());
 
-    // Get deleted users who have chat history
     const deletedUsersWithHistory = await User.find({
       _id: { $in: chatPartnerIds },
       deleted: true,
-    }).select("-password");
+    })
+      .select("-password")
+      .lean();
 
-    // Combine active users and deleted users with chat history
     const filteredUsers = [...activeUsers, ...deletedUsersWithHistory];
 
-    // Get unread message counts and last message time for each user
     const usersWithUnreadCounts = await Promise.all(
       filteredUsers.map(async (user) => {
-        const unreadCount = await Message.countDocuments({
-          senderId: user._id,
-          receiverId: loggedInUserId,
-          read: false,
-        });
+        const [unreadCount, lastMessage] = await Promise.all([
+          Message.countDocuments({
+            senderId: user._id,
+            receiverId: loggedInUserId,
+            read: false,
+          }),
+          Message.findOne({
+            $or: [
+              { senderId: user._id, receiverId: loggedInUserId },
+              { senderId: loggedInUserId, receiverId: user._id },
+            ],
+          })
+            .sort({ createdAt: -1 })
+            .lean(),
+        ]);
 
-        // Get the last message between current user and this user
-        const lastMessage = await Message.findOne({
-          $or: [
-            { senderId: user._id, receiverId: loggedInUserId },
-            { senderId: loggedInUserId, receiverId: user._id },
-          ],
-        }).sort({ createdAt: -1 });
-
-        // Modify user data for deleted users
         const userData = user.deleted
           ? {
-              ...user._doc,
+              ...user,
               fullName: "Chatlight User",
               profilePic:
                 process.env.CLOUDINARY_DEFAULT_AVATAR || "/avatar.png",
               description: "",
             }
-          : user._doc;
+          : user;
 
         return {
           ...userData,
@@ -78,10 +77,9 @@ export const getUsersForSidebar = async (req, res) => {
               }
             : null,
         };
-      })
+      }),
     );
 
-    // Sort users by last message time (most recent first)
     const sortedUsers = usersWithUnreadCounts.sort((a, b) => {
       return new Date(b.lastMessageTime) - new Date(a.lastMessageTime);
     });
@@ -112,7 +110,6 @@ export const getMessages = async (req, res) => {
       },
     });
 
-    // Mark messages sent to current user as read
     const unreadMessages = await Message.find({
       senderId: userToChatId,
       receiverId: myId,
@@ -128,10 +125,9 @@ export const getMessages = async (req, res) => {
         },
         {
           $set: { read: true },
-        }
+        },
       );
 
-      // Notify the sender that their messages have been read
       const senderSocketId = getReceiverSocketId(userToChatId);
       if (senderSocketId) {
         io.to(senderSocketId).emit("messagesRead", {
@@ -141,16 +137,13 @@ export const getMessages = async (req, res) => {
       }
     }
 
-    // Update messages with read status
     const updatedMessages = messages.map((message) => {
       if (message.senderId.toString() === myId.toString()) {
-        // For sent messages, check if they're read
         return {
           ...message.toObject(),
           read: message.read,
         };
       } else {
-        // For received messages, they're now read
         return {
           ...message.toObject(),
           read: true,
@@ -171,18 +164,16 @@ export const sendMessage = async (req, res) => {
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
-    // Create message immediately with temporary image data
     const newMessage = new Message({
       senderId,
       receiverId,
       text,
-      image: image ? "uploading..." : null, // Temporary placeholder
+      image: image ? "uploading..." : null,
       replyTo: replyTo || null,
     });
 
     await newMessage.save();
 
-    // Populate the replyTo field for the response
     await newMessage.populate({
       path: "replyTo",
       select: "text image senderId createdAt",
@@ -192,23 +183,19 @@ export const sendMessage = async (req, res) => {
       },
     });
 
-    // Send immediate response with temporary image
     const responseMessage = {
       ...newMessage.toObject(),
-      image: image || null, // Send original base64 for immediate display
-      isUploading: !!image, // Flag to indicate upload in progress
+      image: image || null,
+      isUploading: !!image,
     };
 
-    // Emit to receiver immediately
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", responseMessage);
     }
 
-    // Send response immediately
     res.status(201).json(responseMessage);
 
-    // Upload image in background if present
     if (image) {
       try {
         const uploadResponse = await cloudinary.uploader.upload(image, {
@@ -217,11 +204,10 @@ export const sendMessage = async (req, res) => {
           fetch_format: "auto",
         });
 
-        // Update message with actual image URL
         const updatedMessage = await Message.findByIdAndUpdate(
           newMessage._id,
           { image: uploadResponse.secure_url },
-          { new: true }
+          { new: true },
         ).populate({
           path: "replyTo",
           select: "text image senderId createdAt",
@@ -231,7 +217,6 @@ export const sendMessage = async (req, res) => {
           },
         });
 
-        // Emit update to both users
         const finalMessage = {
           ...updatedMessage.toObject(),
           isUploading: false,
@@ -248,10 +233,8 @@ export const sendMessage = async (req, res) => {
       } catch (uploadError) {
         console.error("Error uploading image:", uploadError);
 
-        // Update message to indicate upload failure
         await Message.findByIdAndUpdate(newMessage._id, { image: null });
 
-        // Emit failure to both users
         const failedMessage = {
           ...newMessage.toObject(),
           image: null,
@@ -280,14 +263,12 @@ export const markMessagesAsRead = async (req, res) => {
     const { senderId } = req.params;
     const receiverId = req.user._id;
 
-    // Get unread messages before marking them as read
     const unreadMessages = await Message.find({
       senderId: senderId,
       receiverId: receiverId,
       read: false,
     });
 
-    // Mark all messages from this sender as read
     await Message.updateMany(
       {
         senderId: senderId,
@@ -296,10 +277,9 @@ export const markMessagesAsRead = async (req, res) => {
       },
       {
         $set: { read: true },
-      }
+      },
     );
 
-    // Notify the sender that their messages have been read
     if (unreadMessages.length > 0) {
       const senderSocketId = getReceiverSocketId(senderId);
       if (senderSocketId) {
@@ -321,7 +301,6 @@ export const getUnreadMessagesCount = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
 
-    // Count all unread messages sent to the current user
     const totalUnreadCount = await Message.countDocuments({
       receiverId: loggedInUserId,
       read: false,
@@ -343,14 +322,12 @@ export const searchUsers = async (req, res) => {
       return res.status(400).json({ message: "Search query is required" });
     }
 
-    // Find users whose name contains the query (case insensitive)
     const users = await User.find({
       _id: { $ne: loggedInUserId },
       fullName: { $regex: query, $options: "i" },
       deleted: { $ne: true },
     }).select("-password");
 
-    // Get unread message counts for each user
     const usersWithUnreadCounts = await Promise.all(
       users.map(async (user) => {
         const unreadCount = await Message.countDocuments({
@@ -363,7 +340,7 @@ export const searchUsers = async (req, res) => {
           ...user._doc,
           unreadCount,
         };
-      })
+      }),
     );
 
     res.status(200).json(usersWithUnreadCounts);
@@ -378,13 +355,11 @@ export const pinMessage = async (req, res) => {
     const { messageId } = req.params;
     const userId = req.user._id;
 
-    // Find the message
     const message = await Message.findById(messageId);
     if (!message) {
       return res.status(404).json({ message: "Message not found" });
     }
 
-    // Check if user is part of this conversation
     const isParticipant =
       message.senderId.toString() === userId.toString() ||
       message.receiverId.toString() === userId.toString();
@@ -395,7 +370,6 @@ export const pinMessage = async (req, res) => {
         .json({ message: "Not authorized to pin this message" });
     }
 
-    // Update message to pinned
     const updatedMessage = await Message.findByIdAndUpdate(
       messageId,
       {
@@ -403,10 +377,9 @@ export const pinMessage = async (req, res) => {
         pinnedBy: userId,
         pinnedAt: new Date(),
       },
-      { new: true }
+      { new: true },
     );
 
-    // Emit socket event to both users
     const otherUserId =
       message.senderId.toString() === userId.toString()
         ? message.receiverId
@@ -429,13 +402,11 @@ export const unpinMessage = async (req, res) => {
     const { messageId } = req.params;
     const userId = req.user._id;
 
-    // Find the message
     const message = await Message.findById(messageId);
     if (!message) {
       return res.status(404).json({ message: "Message not found" });
     }
 
-    // Check if user is part of this conversation
     const isParticipant =
       message.senderId.toString() === userId.toString() ||
       message.receiverId.toString() === userId.toString();
@@ -446,7 +417,6 @@ export const unpinMessage = async (req, res) => {
         .json({ message: "Not authorized to unpin this message" });
     }
 
-    // Update message to unpinned
     const updatedMessage = await Message.findByIdAndUpdate(
       messageId,
       {
@@ -454,10 +424,9 @@ export const unpinMessage = async (req, res) => {
         pinnedBy: null,
         pinnedAt: null,
       },
-      { new: true }
+      { new: true },
     );
 
-    // Emit socket event to both users
     const otherUserId =
       message.senderId.toString() === userId.toString()
         ? message.receiverId
@@ -505,25 +474,21 @@ export const editMessage = async (req, res) => {
       return res.status(400).json({ message: "Message text is required" });
     }
 
-    // Find the message
     const message = await Message.findById(messageId);
     if (!message) {
       return res.status(404).json({ message: "Message not found" });
     }
 
-    // Check if user is the sender of the message
     if (message.senderId.toString() !== userId.toString()) {
       return res
         .status(403)
         .json({ message: "Not authorized to edit this message" });
     }
 
-    // Check if message is deleted
     if (message.deleted) {
       return res.status(400).json({ message: "Cannot edit deleted message" });
     }
 
-    // Update message with new text and mark as edited
     const updatedMessage = await Message.findByIdAndUpdate(
       messageId,
       {
@@ -533,7 +498,7 @@ export const editMessage = async (req, res) => {
           editedAt: new Date(),
         },
       },
-      { new: true }
+      { new: true },
     ).populate({
       path: "replyTo",
       select: "text image senderId createdAt",
@@ -543,7 +508,6 @@ export const editMessage = async (req, res) => {
       },
     });
 
-    // Emit socket event to both users
     const receiverSocketId = getReceiverSocketId(message.receiverId);
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("messageEdited", updatedMessage);
@@ -566,20 +530,17 @@ export const deleteMessage = async (req, res) => {
     const { messageId } = req.params;
     const userId = req.user._id;
 
-    // Find the message
     const message = await Message.findById(messageId);
     if (!message) {
       return res.status(404).json({ message: "Message not found" });
     }
 
-    // Check if user is the sender of the message
     if (message.senderId.toString() !== userId.toString()) {
       return res
         .status(403)
         .json({ message: "Not authorized to delete this message" });
     }
 
-    // Mark message as deleted instead of removing from database
     const updatedMessage = await Message.findByIdAndUpdate(
       messageId,
       {
@@ -590,7 +551,7 @@ export const deleteMessage = async (req, res) => {
           image: null,
         },
       },
-      { new: true }
+      { new: true },
     ).populate({
       path: "replyTo",
       select: "text image senderId createdAt",
@@ -600,7 +561,6 @@ export const deleteMessage = async (req, res) => {
       },
     });
 
-    // Emit socket event to both users
     const receiverSocketId = getReceiverSocketId(message.receiverId);
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("messageDeleted", updatedMessage);

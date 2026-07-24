@@ -20,7 +20,6 @@ router.post("/login", login);
 router.post("/logout", logout);
 router.post("/firebase-auth", firebaseAuth);
 
-// Email verification routes
 router.post("/send-verification", sendVerificationCode);
 router.post("/verify-email", verifyEmail);
 router.post("/resend-verification", resendVerificationCode);

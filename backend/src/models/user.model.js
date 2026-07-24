@@ -13,14 +13,14 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: function() {
-        return !this.firebaseUid; // Password not required for Firebase users
+      required: function () {
+        return !this.firebaseUid;
       },
       minlength: 6,
     },
     firebaseUid: {
       type: String,
-      sparse: true, // Allows null values but ensures uniqueness when present
+      sparse: true,
     },
     emailVerified: {
       type: Boolean,
@@ -28,8 +28,8 @@ const userSchema = new mongoose.Schema(
     },
     authProvider: {
       type: String,
-      enum: ['local', 'google'],
-      default: 'local',
+      enum: ["local", "google"],
+      default: "local",
     },
     profilePic: {
       type: String,
@@ -53,8 +53,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
+
+userSchema.index({ deleted: 1 });
 
 const User = mongoose.model("User", userSchema);
 
