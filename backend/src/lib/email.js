@@ -1,38 +1,56 @@
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import path from "path";
 
 const __dirname = path.resolve();
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
-// Create transporter
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD,
+const sendEmailViaBrevo = async ({ to, subject, html }) => {
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail =
+    process.env.SENDER_EMAIL ||
+    process.env.EMAIL_USER ||
+    "chatlight.service@gmail.com";
+
+  if (!apiKey) {
+    throw new Error(
+      "BREVO_API_KEY is not configured in environment variables.",
+    );
+  }
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "api-key": apiKey,
+      "content-type": "application/json",
     },
+    body: JSON.stringify({
+      sender: {
+        name: "Chatlight",
+        email: senderEmail,
+      },
+      to: [{ email: to }],
+      subject: subject,
+      htmlContent: html,
+    }),
   });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error("Brevo API error response:", data);
+    throw new Error(data.message || "Failed to send email via Brevo API.");
+  }
+
+  return data;
 };
 
-// Generate 6-digit verification code
 export const generateVerificationCode = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Send verification email
 export const sendVerificationEmail = async (email, code, fullName) => {
-  const transporter = createTransporter();
-
-  const mailOptions = {
-    from: {
-      name: "Chatlight",
-      address: process.env.EMAIL_USER,
-    },
-    to: email,
-    subject: "Verify Your Email Address - Chatlight",
-    html: `
+  const html = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -179,204 +197,29 @@ export const sendVerificationEmail = async (email, code, fullName) => {
               please ignore this email.
             </p>
             <p>
-              © 2025 Chatlight. All rights reserved.
+              © ${new Date().getFullYear()} Chatlight. All rights reserved.
             </p>
           </div>
         </div>
       </body>
       </html>
-    `,
-  };
+  `;
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log("Verification email sent:", info.messageId);
-    return { success: true, messageId: info.messageId };
+    const info = await sendEmailViaBrevo({
+      to: email,
+      subject: "Verify Your Email Address - Chatlight",
+      html,
+    });
+    console.log("Verification email sent via Brevo:", info.messageId || info);
+    return { success: true, messageId: info.messageId || info.messageIds?.[0] };
   } catch (error) {
-    // Log full error on the server for debugging
     console.error("Error sending verification email:", {
       message: error.message,
-      code: error.code,
-      response: error.response?.body || error.response,
     });
-    // Re-throw with a more descriptive message that can be sent to client
     throw new Error(
       error.message ||
         "Failed to send verification email. Please check email configuration.",
     );
-  }
-};
-
-// Send welcome email after successful verification
-export const sendWelcomeEmail = async (email, fullName) => {
-  const transporter = createTransporter();
-
-  const mailOptions = {
-    from: {
-      name: "Chatlight",
-      address: process.env.EMAIL_USER,
-    },
-    to: email,
-    subject: "Welcome to Chatlight!",
-    html: `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Welcome to Chatlight</title>
-        <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f8f9fa;
-          }
-          .container {
-            background: white;
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 30px;
-          }
-          .logo {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #ff6b35, #f7931e);
-            border-radius: 12px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-          }
-          .title {
-            color: #2d3748;
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 10px;
-          }
-          .subtitle {
-            color: #718096;
-            font-size: 18px;
-            margin-bottom: 30px;
-          }
-          .message {
-            color: #4a5568;
-            font-size: 16px;
-            line-height: 1.5;
-            margin-bottom: 20px;
-          }
-          .features {
-            background: #f7fafc;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 30px 0;
-          }
-          .feature {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-          }
-          .feature-icon {
-            width: 24px;
-            height: 24px;
-            background: #48bb78;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 14px;
-            margin-right: 15px;
-          }
-          .footer {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-            color: #718096;
-            font-size: 14px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <div class="logo">
-              <img 
-                src="${process.env.CLOUDINARY_APP_LOGO || process.env.CLOUDINARY_DEFAULT_AVATAR || "https://via.placeholder.com/60"}" 
-                alt="Chatlight Logo" 
-                style="width: 100%; height: 100%; object-fit: cover; display: block;"
-              />
-            </div>
-            <h1 class="title">Welcome to Chatlight!</h1>
-            <p class="subtitle">Your account has been successfully verified</p>
-          </div>
-          
-          <p class="message">
-            Hi ${fullName},
-          </p>
-          
-          <p class="message">
-            Congratulations! Your email has been successfully verified and your Chatlight account is now active. 
-            You're all set to start connecting with friends and family.
-          </p>
-          
-          <div class="features">
-            <h3 style="color: #2d3748; margin-top: 0;">What you can do now:</h3>
-            <div class="feature">
-              <div class="feature-icon"></div>
-              <span>Send and receive messages instantly</span>
-            </div>
-            <div class="feature">
-              <div class="feature-icon"></div>
-              <span>Connect with friends and family</span>
-            </div>
-            <div class="feature">
-              <div class="feature-icon"></div>
-              <span>Share photos and memories</span>
-            </div>
-            <div class="feature">
-              <div class="feature-icon"></div>
-              <span>Enjoy secure, private conversations</span>
-            </div>
-          </div>
-          
-          <p class="message">
-            If you have any questions or need help getting started, don't hesitate to reach out to our support team.
-          </p>
-          
-          <div class="footer">
-            <p>
-              Happy chatting!<br>
-              The Chatlight Team
-            </p>
-            <p>
-              © 2025 Chatlight. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `,
-  };
-
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log("Welcome email sent:", info.messageId);
-    return { success: true, messageId: info.messageId };
-  } catch (error) {
-    console.error("Error sending welcome email:", error);
-    // Don't throw error for welcome email as it's not critical
-    return { success: false, error: error.message };
   }
 };

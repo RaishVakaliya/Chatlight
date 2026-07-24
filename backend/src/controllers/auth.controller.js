@@ -7,7 +7,6 @@ import { verifyFirebaseToken } from "../middleware/firebase-auth.middleware.js";
 import {
   generateVerificationCode,
   sendVerificationEmail,
-  sendWelcomeEmail,
 } from "../lib/email.js";
 
 export const signup = async (req, res) => {
@@ -30,12 +29,6 @@ export const signup = async (req, res) => {
     }
 
     const token = generateToken(user._id, res);
-
-    try {
-      await sendWelcomeEmail(email, user.fullName);
-    } catch (emailError) {
-      console.log("Welcome email failed:", emailError.message);
-    }
 
     res.status(201).json({
       _id: user._id,
