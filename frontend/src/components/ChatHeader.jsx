@@ -12,10 +12,18 @@ const ChatHeader = ({ onProfileClick }) => {
       <div className="p-1 border-b border-base-300">
         <div className="flex items-center justify-between">
           <div
-            className="flex items-center gap-3 cursor-pointer hover:bg-base-200 p-2 rounded-lg transition-colors"
+            role="button"
+            tabIndex={0}
+            aria-label={`View ${selectedUser.fullName}'s contact info`}
+            className="flex items-center gap-3 cursor-pointer hover:bg-base-200 p-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
             onClick={onProfileClick}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onProfileClick();
+              }
+            }}
           >
-            {/* Avatar */}
             <div className="avatar">
               <div className="size-10 rounded-full relative select-none">
                 <img
@@ -25,8 +33,7 @@ const ChatHeader = ({ onProfileClick }) => {
               </div>
             </div>
 
-            {/* User info */}
-            <div> 
+            <div>
               <h3 className="font-medium">{selectedUser.fullName}</h3>
               <p className="text-sm text-base-content/70">
                 {onlineUsers.includes(selectedUser._id) ? "Online" : "Offline"}
@@ -34,10 +41,10 @@ const ChatHeader = ({ onProfileClick }) => {
             </div>
           </div>
 
-          {/* Close button */}
           <button
             onClick={() => setSelectedUser(null)}
-            className="p-2 hover:bg-base-200 rounded-lg transition-colors"
+            aria-label="Close conversation"
+            className="p-2 hover:bg-base-200 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <X />
           </button>

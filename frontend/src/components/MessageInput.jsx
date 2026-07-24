@@ -142,6 +142,7 @@ const MessageInput = forwardRef((props, ref) => {
             />
             <button
               onClick={removeImage}
+              aria-label="Remove image attachment"
               className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-base-300
               flex items-center justify-center"
               type="button"
@@ -156,6 +157,7 @@ const MessageInput = forwardRef((props, ref) => {
         <div className="flex-1 flex gap-2">
           <button
             type="button"
+            aria-label="Attach image"
             className={`hidden sm:flex btn btn-circle
                      ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
             onClick={() => fileInputRef.current?.click()}
@@ -165,6 +167,7 @@ const MessageInput = forwardRef((props, ref) => {
           <input
             ref={textInputRef}
             type="text"
+            aria-label="Message input"
             className="w-full input input-bordered rounded-lg input-sm sm:input-md"
             placeholder="Type a message..."
             value={text}
@@ -173,6 +176,7 @@ const MessageInput = forwardRef((props, ref) => {
           <input
             type="file"
             accept="image/*"
+            aria-label="File upload"
             className="hidden"
             ref={fileInputRef}
             onChange={handleImageChange}
@@ -180,6 +184,7 @@ const MessageInput = forwardRef((props, ref) => {
         </div>
         <button
           type="submit"
+          aria-label="Send message"
           className="btn btn-sm btn-circle"
           disabled={(!text.trim() && !imagePreview) || isSending}
         >

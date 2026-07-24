@@ -20,31 +20,26 @@ export function truncateText(text, maxLength = 30) {
 
 export function formatLastMessage(lastMessage, currentUserId) {
   if (!lastMessage) return "No messages yet";
+  if (lastMessage.deleted) return "Message was deleted";
 
-  // If the message is deleted
-  if (lastMessage.deleted) {
-    return "Message was deleted";
-  }
+  const isSelf = lastMessage.senderId === currentUserId;
+  const prefix = isSelf ? "You: " : "";
 
-  // If it's an image message
   if (lastMessage.image && !lastMessage.text) {
-    const sender = lastMessage.senderId === currentUserId ? "You" : "";
-    return `${sender ? "You: " : ""}📷 Photo`;
+    return `${prefix}📷 Photo`;
   }
 
-  // If it has text
   if (lastMessage.text) {
-    const sender = lastMessage.senderId === currentUserId ? "You" : "";
-    const truncatedText = truncateText(lastMessage.text, 25);
-    return `${sender ? "You: " : ""}${truncatedText}`;
+    return `${prefix}${truncateText(lastMessage.text, 25)}`;
   }
 
   return "No messages yet";
 }
 
-// Detect if the device is mobile
 export function isMobileDevice() {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  ) || window.innerWidth < 768;
+  return (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent,
+    ) || window.innerWidth < 768
+  );
 }
