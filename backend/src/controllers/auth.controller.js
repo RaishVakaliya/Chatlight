@@ -198,7 +198,11 @@ export const updateProfile = async (req, res) => {
         }
         return res
           .status(400)
-          .json({ message: "Failed to upload image. Please try again." });
+          .json({
+            message:
+              cloudinaryError.message ||
+              "Failed to upload image. Please try again.",
+          });
       }
     }
 

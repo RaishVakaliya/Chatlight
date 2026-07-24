@@ -1,8 +1,6 @@
 import dotenv from "dotenv";
-import path from "path";
 
-const __dirname = path.resolve();
-dotenv.config({ path: path.join(__dirname, "../.env") });
+dotenv.config();
 
 const sendEmailViaBrevo = async ({ to, subject, html }) => {
   const apiKey = process.env.BREVO_API_KEY;

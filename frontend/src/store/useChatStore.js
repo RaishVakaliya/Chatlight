@@ -24,7 +24,7 @@ export const useChatStore = create((set, get) => ({
 
       // Calculate number of chats with unread messages
       const unreadChatCount = res.data.filter(
-        (user) => (user.unreadCount || 0) > 0
+        (user) => (user.unreadCount || 0) > 0,
       ).length;
       set({ unreadChatCount: unreadChatCount });
     } catch (error) {
@@ -63,7 +63,7 @@ export const useChatStore = create((set, get) => ({
 
     // Recalculate total unread chat count
     const unreadChatCount = updatedUsers.filter(
-      (user) => (user.unreadCount || 0) > 0
+      (user) => (user.unreadCount || 0) > 0,
     ).length;
 
     set({
@@ -86,7 +86,7 @@ export const useChatStore = create((set, get) => ({
     try {
       const res = await axiosInstance.post(
         `/messages/send/${selectedUser._id}`,
-        messageData
+        messageData,
       );
 
       // Update messages
@@ -127,83 +127,6 @@ export const useChatStore = create((set, get) => ({
 
     const socket = useAuthStore.getState().socket;
 
-    socket.on("newMessage", (newMessage) => {
-      const isMessageSentFromSelectedUser =
-        newMessage.senderId === selectedUser._id;
-      if (!isMessageSentFromSelectedUser) return;
-
-      // Add message to current chat and mark as read immediately
-      const messageWithReadStatus = { ...newMessage, read: true };
-      set({
-        messages: [...get().messages, messageWithReadStatus],
-      });
-
-      // Automatically mark message as read in backend since chat is active
-      // This will trigger the backend to notify the sender
-      try {
-        axiosInstance.put(`/messages/read/${newMessage.senderId}`);
-      } catch (error) {
-        console.error("Failed to mark message as read:", error);
-      }
-    });
-
-    // Listen for new messages from other users to update unread counts and sort
-    socket.on("newMessage", (newMessage) => {
-      const isMessageSentToCurrentUser =
-        newMessage.receiverId === useAuthStore.getState().authUser._id;
-      if (isMessageSentToCurrentUser) {
-        // Use the selective update function instead of full users array manipulation
-        const { users, selectedUser } = get();
-        const senderUser = users.find(
-          (user) => user._id === newMessage.senderId
-        );
-
-        if (senderUser) {
-          // Only increment unread count if this chat is not currently selected
-          const shouldIncrementUnread =
-            !selectedUser || selectedUser._id !== newMessage.senderId;
-          const newUnreadCount = shouldIncrementUnread
-            ? (senderUser.unreadCount || 0) + 1
-            : senderUser.unreadCount || 0;
-
-          // Update the specific user with new unread count, last message time, and last message data
-          const updatedUsers = users.map((user) => {
-            if (user._id === newMessage.senderId) {
-              return {
-                ...user,
-                unreadCount: newUnreadCount,
-                lastMessageTime: newMessage.createdAt,
-                lastMessage: {
-                  text: newMessage.text,
-                  image: newMessage.image,
-                  senderId: newMessage.senderId,
-                  createdAt: newMessage.createdAt,
-                  deleted: newMessage.deleted,
-                },
-              };
-            }
-            return user;
-          });
-
-          // Sort users by last message time (most recent first)
-          const sortedUsers = updatedUsers.sort((a, b) => {
-            return new Date(b.lastMessageTime) - new Date(a.lastMessageTime);
-          });
-
-          // Update unread chat count
-          const unreadChatCount = sortedUsers.filter(
-            (user) => (user.unreadCount || 0) > 0
-          ).length;
-
-          set({
-            users: sortedUsers,
-            unreadChatCount: unreadChatCount,
-          });
-        }
-      }
-    });
-
-    // Listen for messages read events
     socket.on("messagesRead", (data) => {
       const { messageIds } = data;
       const { messages } = get();
@@ -225,12 +148,12 @@ export const useChatStore = create((set, get) => ({
 
       // Update message in current messages
       const updatedMessages = messages.map((msg) =>
-        msg._id === pinnedMessage._id ? pinnedMessage : msg
+        msg._id === pinnedMessage._id ? pinnedMessage : msg,
       );
 
       // Add to pinned messages if not already there
       const isAlreadyPinned = pinnedMessages.some(
-        (msg) => msg._id === pinnedMessage._id
+        (msg) => msg._id === pinnedMessage._id,
       );
       const updatedPinnedMessages = isAlreadyPinned
         ? pinnedMessages
@@ -248,12 +171,12 @@ export const useChatStore = create((set, get) => ({
 
       // Update message in current messages
       const updatedMessages = messages.map((msg) =>
-        msg._id === unpinnedMessage._id ? unpinnedMessage : msg
+        msg._id === unpinnedMessage._id ? unpinnedMessage : msg,
       );
 
       // Remove from pinned messages
       const updatedPinnedMessages = pinnedMessages.filter(
-        (msg) => msg._id !== unpinnedMessage._id
+        (msg) => msg._id !== unpinnedMessage._id,
       );
 
       set({
@@ -268,7 +191,7 @@ export const useChatStore = create((set, get) => ({
 
       // Update the message in current messages
       const updatedMessages = messages.map((msg) =>
-        msg._id === updatedMessage._id ? updatedMessage : msg
+        msg._id === updatedMessage._id ? updatedMessage : msg,
       );
 
       set({ messages: updatedMessages });
@@ -280,24 +203,21 @@ export const useChatStore = create((set, get) => ({
 
       // Update the message in current messages
       const updatedMessages = messages.map((msg) =>
-        msg._id === deletedMessage._id ? deletedMessage : msg
+        msg._id === deletedMessage._id ? deletedMessage : msg,
       );
 
       // Remove from pinned messages if it was pinned
       const updatedPinnedMessages = pinnedMessages.filter(
-        (msg) => msg._id !== deletedMessage._id
+        (msg) => msg._id !== deletedMessage._id,
       );
 
       // Update sidebar if this was the last message
       const currentUserId = useAuthStore.getState().authUser._id;
       const updatedUsers = users.map((user) => {
-        // Check if this deleted message was the last message for this conversation
-        // The deleted message could be from current user to this user, or from this user to current user
         const isLastMessageMatch =
           user.lastMessage &&
           ((user.lastMessage.senderId === deletedMessage.senderId &&
             user.lastMessage.createdAt === deletedMessage.createdAt) ||
-            // Additional check: if the conversation involves this user and the deleted message
             (((deletedMessage.senderId === currentUserId &&
               deletedMessage.receiverId === user._id) ||
               (deletedMessage.senderId === user._id &&
@@ -331,7 +251,7 @@ export const useChatStore = create((set, get) => ({
 
       // Update the message in current messages
       const updatedMessages = messages.map((msg) =>
-        msg._id === editedMessage._id ? editedMessage : msg
+        msg._id === editedMessage._id ? editedMessage : msg,
       );
 
       set({ messages: updatedMessages });
@@ -341,6 +261,9 @@ export const useChatStore = create((set, get) => ({
   subscribeToGlobalEvents: () => {
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
+
+    socket.off("profileUpdated");
+    socket.off("newMessage");
 
     // Listen for profile updates from any user
     socket.on("profileUpdated", (profileData) => {
@@ -354,10 +277,10 @@ export const useChatStore = create((set, get) => ({
               profilePic: profileData.profilePic,
               description: profileData.description,
             }
-          : user
+          : user,
       );
 
-      // Update selected user if it's the one that got updated (for chat header and contact info)
+      // Update selected user if it's the one that got updated
       const updatedSelectedUser =
         selectedUser && selectedUser._id === profileData.userId
           ? {
@@ -372,6 +295,73 @@ export const useChatStore = create((set, get) => ({
         selectedUser: updatedSelectedUser,
       });
     });
+
+    socket.on("newMessage", (newMessage) => {
+      const authUser = useAuthStore.getState().authUser;
+      if (!authUser) return;
+
+      const { users, selectedUser } = get();
+
+      if (newMessage.receiverId === authUser._id) {
+        const isFromSelectedUser =
+          selectedUser && selectedUser._id === newMessage.senderId;
+
+        if (isFromSelectedUser) {
+          const messageWithReadStatus = { ...newMessage, read: true };
+          set({
+            messages: [...get().messages, messageWithReadStatus],
+          });
+          axiosInstance
+            .put(`/messages/read/${newMessage.senderId}`)
+            .catch((err) =>
+              console.error("Failed to mark message as read:", err),
+            );
+        }
+
+        const senderUser = users.find(
+          (user) => user._id === newMessage.senderId,
+        );
+
+        if (!senderUser) {
+          get().getUsers();
+        } else {
+          const newUnreadCount = isFromSelectedUser
+            ? 0
+            : (senderUser.unreadCount || 0) + 1;
+
+          const updatedUsers = users.map((user) => {
+            if (user._id === newMessage.senderId) {
+              return {
+                ...user,
+                unreadCount: newUnreadCount,
+                lastMessageTime: newMessage.createdAt,
+                lastMessage: {
+                  text: newMessage.text,
+                  image: newMessage.image,
+                  senderId: newMessage.senderId,
+                  createdAt: newMessage.createdAt,
+                  deleted: newMessage.deleted,
+                },
+              };
+            }
+            return user;
+          });
+
+          const sortedUsers = updatedUsers.sort(
+            (a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime),
+          );
+
+          const unreadChatCount = sortedUsers.filter(
+            (user) => (user.unreadCount || 0) > 0,
+          ).length;
+
+          set({
+            users: sortedUsers,
+            unreadChatCount,
+          });
+        }
+      }
+    });
   },
 
   unsubscribeFromGlobalEvents: () => {
@@ -379,11 +369,13 @@ export const useChatStore = create((set, get) => ({
     if (!socket) return;
 
     socket.off("profileUpdated");
+    socket.off("newMessage");
   },
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
-    socket.off("newMessage");
+    if (!socket) return;
+
     socket.off("messagesRead");
     socket.off("messagePinned");
     socket.off("messageUnpinned");
@@ -422,7 +414,7 @@ export const useChatStore = create((set, get) => ({
       set({ pinnedMessages: res.data });
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Failed to fetch pinned messages"
+        error.response?.data?.message || "Failed to fetch pinned messages",
       );
     } finally {
       set({ isPinnedMessagesLoading: false });
@@ -443,14 +435,14 @@ export const useChatStore = create((set, get) => ({
               pinnedBy: res.data.pinnedBy,
               pinnedAt: res.data.pinnedAt,
             }
-          : msg
+          : msg,
       );
       set({ messages: updatedMessages });
 
       // Add to pinned messages if not already there
       const { pinnedMessages } = get();
       const isAlreadyPinned = pinnedMessages.some(
-        (msg) => msg._id === messageId
+        (msg) => msg._id === messageId,
       );
       if (!isAlreadyPinned) {
         set({ pinnedMessages: [res.data, ...pinnedMessages] });
@@ -471,14 +463,14 @@ export const useChatStore = create((set, get) => ({
       const updatedMessages = messages.map((msg) =>
         msg._id === messageId
           ? { ...msg, pinned: false, pinnedBy: null, pinnedAt: null }
-          : msg
+          : msg,
       );
       set({ messages: updatedMessages });
 
       // Remove from pinned messages
       const { pinnedMessages } = get();
       const updatedPinnedMessages = pinnedMessages.filter(
-        (msg) => msg._id !== messageId
+        (msg) => msg._id !== messageId,
       );
       set({ pinnedMessages: updatedPinnedMessages });
 
@@ -497,7 +489,7 @@ export const useChatStore = create((set, get) => ({
       // Update the message in current messages
       const { messages } = get();
       const updatedMessages = messages.map((msg) =>
-        msg._id === messageId ? res.data : msg
+        msg._id === messageId ? res.data : msg,
       );
       set({ messages: updatedMessages });
 
@@ -514,13 +506,13 @@ export const useChatStore = create((set, get) => ({
       // Update the message in current messages
       const { messages, users, selectedUser } = get();
       const updatedMessages = messages.map((msg) =>
-        msg._id === messageId ? res.data : msg
+        msg._id === messageId ? res.data : msg,
       );
 
       // Remove from pinned messages if it was pinned
       const { pinnedMessages } = get();
       const updatedPinnedMessages = pinnedMessages.filter(
-        (msg) => msg._id !== messageId
+        (msg) => msg._id !== messageId,
       );
 
       // Update sidebar if this was the last message
