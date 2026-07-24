@@ -42,7 +42,7 @@ export const signup = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.log("Error in signup controller", error.message);
+    console.error("Error in signup controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -85,7 +85,7 @@ export const login = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.log("Error in login controller", error.message);
+    console.error("Error in login controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -149,7 +149,7 @@ export const firebaseAuth = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.log("Error in Firebase auth controller", error.message);
+    console.error("Error in Firebase auth controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -169,7 +169,7 @@ export const logout = (req, res) => {
 
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
-    console.log("Error in logout controller", error.message);
+    console.error("Error in logout controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -186,7 +186,7 @@ export const updateProfile = async (req, res) => {
         const uploadResponse = await cloudinary.uploader.upload(profilePic);
         updateData.profilePic = uploadResponse.secure_url;
       } catch (cloudinaryError) {
-        console.log("Cloudinary upload error:", cloudinaryError);
+        console.error("Cloudinary upload error:", cloudinaryError);
         if (
           cloudinaryError.message &&
           cloudinaryError.message.includes("File size too large")
@@ -225,7 +225,7 @@ export const updateProfile = async (req, res) => {
 
     res.status(200).json(updatedUser);
   } catch (error) {
-    console.log("error in update profile:", error);
+    console.error("error in update profile:", error);
     if (error.type === "entity.too.large") {
       return res.status(413).json({
         message:
@@ -264,7 +264,7 @@ export const deleteAccount = async (req, res) => {
 
     res.status(200).json({ message: "Account deleted successfully" });
   } catch (error) {
-    console.log("Error in deleteAccount controller", error.message);
+    console.error("Error in deleteAccount controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -273,7 +273,7 @@ export const checkAuth = (req, res) => {
   try {
     res.status(200).json(req.user);
   } catch (error) {
-    console.log("Error in checkAuth controller", error.message);
+    console.error("Error in checkAuth controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -325,7 +325,7 @@ export const sendVerificationCode = async (req, res) => {
       email: email,
     });
   } catch (error) {
-    console.log("Error in sendVerificationCode controller", error.message);
+    console.error("Error in sendVerificationCode controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -358,7 +358,7 @@ export const verifyEmail = async (req, res) => {
 
     res.status(200).json({ message: "Email verified successfully" });
   } catch (error) {
-    console.log("Error in verifyEmail controller", error.message);
+    console.error("Error in verifyEmail controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -388,7 +388,7 @@ export const resendVerificationCode = async (req, res) => {
 
     res.status(200).json({ message: "Verification code resent successfully" });
   } catch (error) {
-    console.log("Error in resendVerificationCode controller", error.message);
+    console.error("Error in resendVerificationCode controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

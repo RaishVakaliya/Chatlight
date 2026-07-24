@@ -6,7 +6,11 @@ export const protectRoute = async (req, res, next) => {
     let token = req.cookies.jwt;
 
     // Fallback to Authorization header if cookie is missing
-    if (!token && req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+    if (
+      !token &&
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer ")
+    ) {
       token = req.headers.authorization.split(" ")[1];
     }
 
@@ -37,7 +41,7 @@ export const protectRoute = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.log("Error in protectRoute middleware: ", error.message);
+    console.error("Error in protectRoute middleware: ", error.message);
     res.status(500).json({ message: "Internal server error" });
   }
 };

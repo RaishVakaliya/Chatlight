@@ -16,11 +16,6 @@ export const generateToken = (userId, res) => {
     partitioned: !isDev,
   };
 
-  console.log("Setting JWT cookie with options:", {
-    ...cookieOptions,
-    token: token.substring(0, 20) + "...",
-  });
-
   res.cookie("jwt", token, cookieOptions);
 
   return token;

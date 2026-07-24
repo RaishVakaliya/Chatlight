@@ -2,7 +2,10 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
-import { signInWithGoogle, checkGoogleRedirect } from "../services/authService.js";
+import {
+  signInWithGoogle,
+  checkGoogleRedirect,
+} from "../services/authService.js";
 
 // Backend URL for Socket.IO connection
 const BASE_URL =
@@ -138,7 +141,7 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: res.data });
       toast.success("Profile updated successfully");
     } catch (error) {
-      console.log("error in update profile:", error);
+      console.error("error in update profile:", error);
       toast.error(error.response.data.message);
     } finally {
       set({ isUpdatingProfile: false });
@@ -156,7 +159,7 @@ export const useAuthStore = create((set, get) => ({
       toast.success("Account deleted successfully");
       return { success: true };
     } catch (error) {
-      console.log("error in delete account:", error);
+      console.error("error in delete account:", error);
       toast.error(error.response?.data?.message || "Failed to delete account");
       return { success: false, error: error.response?.data?.message };
     }
@@ -168,7 +171,7 @@ export const useAuthStore = create((set, get) => ({
       await axiosInstance.post("/auth/send-verification", data);
       return { success: true };
     } catch (error) {
-      console.log("error in send verification:", error);
+      console.error("error in send verification:", error);
       throw new Error(
         error.response?.data?.message || "Failed to send verification code",
       );
@@ -186,7 +189,7 @@ export const useAuthStore = create((set, get) => ({
       });
       return { success: true };
     } catch (error) {
-      console.log("error in verify email:", error);
+      console.error("error in verify email:", error);
       throw new Error(error.response?.data?.message || "Verification failed");
     } finally {
       set({ isVerifying: false });
@@ -198,7 +201,7 @@ export const useAuthStore = create((set, get) => ({
       await axiosInstance.post("/auth/resend-verification", { email });
       return { success: true };
     } catch (error) {
-      console.log("error in resend verification:", error);
+      console.error("error in resend verification:", error);
       throw new Error(error.response?.data?.message || "Failed to resend code");
     }
   },

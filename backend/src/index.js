@@ -19,24 +19,11 @@ const PORT = process.env.PORT || 5001;
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
-app.use((req, res, next) => {
-  if (process.env.NODE_ENV === "production") {
-    console.log(
-      `[DEBUG] ${req.method} ${req.url} - Cookies: ${req.cookies ? Object.keys(req.cookies).join(", ") : "none"}`,
-    );
-  } else {
-    console.log(`[DEBUG] ${req.method} ${req.url} - Cookies:`, req.cookies);
-  }
-  next();
-});
-
 const allowedOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(",").map((url) => url.trim().replace(/\/$/, ""))
+  ? process.env.FRONTEND_URL.split(",").map((url) =>
+      url.trim().replace(/\/$/, ""),
+    )
   : ["http://localhost:5173"];
-
-console.log("Allowed CORS origins:", allowedOrigins);
-console.log("NODE_ENV:", process.env.NODE_ENV);
-console.log("FRONTEND_URL from env:", process.env.FRONTEND_URL);
 
 app.use(
   cors({
@@ -68,8 +55,7 @@ app.use(
       if (isAllowed) {
         callback(null, true);
       } else {
-        console.log("CORS blocked origin:", origin);
-        console.log("Allowed origins list:", allowedOrigins);
+        console.error("CORS blocked origin:", origin);
         callback(new Error(`Origin ${origin} not allowed by CORS`));
       }
     },
@@ -88,18 +74,6 @@ app.get("/api/health", (req, res) => {
     status: "OK",
     message: "Your API is running",
     timestamp: new Date().toISOString(),
-  });
-});
-
-app.get("/api/debug/cookies", (req, res) => {
-  res.json({
-    cookies: req.cookies,
-    headers: {
-      cookie: req.headers.cookie,
-      origin: req.headers.origin,
-      referer: req.headers.referer,
-    },
-    hasJwt: !!req.cookies.jwt,
   });
 });
 
