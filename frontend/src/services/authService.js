@@ -10,7 +10,6 @@ export const signInWithGoogle = async () => {
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
 
-    // Get the ID token from Firebase
     const idToken = await user.getIdToken();
 
     return {
@@ -26,14 +25,12 @@ export const signInWithGoogle = async () => {
     };
   } catch (error) {
     console.error("Google sign-in error:", error);
-    // Fallback to redirect for popup-related errors
     const popupErrors = [
       "auth/popup-closed-by-user",
       "auth/cancelled-popup-request",
       "auth/popup-blocked",
     ];
     if (popupErrors.includes(error?.code)) {
-      // Start redirect flow (page will navigate)
       await signInWithRedirect(auth, googleProvider);
       return { success: false, redirecting: true };
     }

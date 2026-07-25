@@ -10,7 +10,6 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
 
   return (
     <div className="flex-1 flex flex-col overflow-auto bg-base-100">
-      {/* Header */}
       <div className="p-4 border-b border-base-300 bg-base-200">
         <div className="flex items-center gap-4">
           <button
@@ -23,9 +22,7 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
         </div>
       </div>
 
-      {/* Profile Content */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        {/* Profile Picture and Basic Info */}
         <div className="text-center space-y-4">
           <div className="relative inline-block">
             <img
@@ -33,7 +30,6 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
               alt={user.fullName}
               className="w-40 h-40 rounded-full object-cover border-4 border-base-300 select-none"
             />
-            {/* Online status indicator */}
             <div
               className={`absolute bottom-4 right-4 w-8 h-8 rounded-full border-4 border-base-100 ${
                 isOnline ? "bg-green-500" : "bg-gray-400"
@@ -46,7 +42,6 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
           </div>
         </div>
 
-        {/* Description */}
         {user.description && (
           <div className="space-y-3">
             <h4 className="text-base font-medium text-base-content/70">
@@ -58,7 +53,6 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
           </div>
         )}
 
-        {/* Account Information */}
         <div className="space-y-4 pt-6 border-t border-base-300">
           <h4 className="text-base font-medium text-base-content/70">
             Account Information

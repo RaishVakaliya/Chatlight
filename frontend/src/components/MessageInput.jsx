@@ -14,14 +14,11 @@ const MessageInput = forwardRef((props, ref) => {
 
   useImperativeHandle(ref, () => ({
     focus: () => {
-      // Skip auto-focus on mobile devices
       if (isMobileDevice()) return;
 
-      // Use requestAnimationFrame to ensure DOM is ready
       requestAnimationFrame(() => {
         if (textInputRef.current) {
           textInputRef.current.focus();
-          // Also set cursor to end of text if there's any
           textInputRef.current.setSelectionRange(
             textInputRef.current.value.length,
             textInputRef.current.value.length,
@@ -38,7 +35,6 @@ const MessageInput = forwardRef((props, ref) => {
       const img = new window.Image(); // Use window.Image to avoid conflict with lucide-react Image
 
       img.onload = () => {
-        // Calculate new dimensions
         let { width, height } = img;
         if (width > maxWidth) {
           height = (height * maxWidth) / width;
@@ -48,14 +44,12 @@ const MessageInput = forwardRef((props, ref) => {
         canvas.width = width;
         canvas.height = height;
 
-        // Draw and compress
         ctx.drawImage(img, 0, 0, width, height);
         const compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
         resolve(compressedDataUrl);
       };
 
       img.onerror = () => {
-        // Fallback: return original file as base64 if compression fails
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result);
         reader.readAsDataURL(file);
@@ -72,7 +66,6 @@ const MessageInput = forwardRef((props, ref) => {
       return;
     }
 
-    // Show loading state
     toast.loading("Processing image...", { id: "image-processing" });
 
     try {
@@ -99,14 +92,12 @@ const MessageInput = forwardRef((props, ref) => {
 
     setIsSending(true);
 
-    // Store current values before clearing
     const messageData = {
       text: text.trim(),
       image: imagePreview,
       replyTo: replyingTo?._id,
     };
 
-    // Clear form immediately for better UX
     setText("");
     setImagePreview(null);
     clearReplyingTo();
@@ -115,13 +106,11 @@ const MessageInput = forwardRef((props, ref) => {
     try {
       await sendMessage(messageData);
 
-      // Keep focus on input after sending message
       setTimeout(() => {
         textInputRef.current?.focus();
       }, 50);
     } catch (error) {
       console.error("Failed to send message:", error);
-      // Restore form data on error
       setText(messageData.text);
       setImagePreview(messageData.image);
       toast.error("Failed to send message. Please try again.");

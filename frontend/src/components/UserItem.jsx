@@ -2,12 +2,7 @@ import { memo } from "react";
 import { formatLastMessage } from "../lib/utils";
 import { useAuthStore } from "../store/useAuthStore";
 
-const UserItem = memo(({ 
-  user, 
-  selectedUser, 
-  onlineUsers, 
-  onSelectUser 
-}) => {
+const UserItem = memo(({ user, selectedUser, onlineUsers, onSelectUser }) => {
   const { authUser } = useAuthStore();
   const isSelected = selectedUser?._id === user._id;
   const isOnline = onlineUsers.includes(user._id);
@@ -40,7 +35,6 @@ const UserItem = memo(({
         )}
       </div>
 
-      {/* User info - only visible on larger screens */}
       <div className="hidden lg:block text-left min-w-0">
         <div className="font-medium truncate">{user.fullName}</div>
         <div className="text-sm text-zinc-400 truncate">

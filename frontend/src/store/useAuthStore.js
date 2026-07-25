@@ -7,7 +7,6 @@ import {
   checkGoogleRedirect,
 } from "../services/authService.js";
 
-// Backend URL for Socket.IO connection
 const BASE_URL =
   import.meta.env.MODE === "development"
     ? "http://localhost:5001"
@@ -27,7 +26,6 @@ export const useAuthStore = create((set, get) => ({
 
   checkAuth: async () => {
     try {
-      // Check if we are returning from Google OAuth Redirect flow
       const redirectResult = await checkGoogleRedirect();
       if (redirectResult) {
         if (redirectResult.success) {
@@ -50,7 +48,6 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: res.data });
       get().connectSocket();
     } catch (error) {
-      // 401 is expected when user is not authenticated - don't log it as an error
       if (error.response?.status !== 401) {
         console.error("Error in checkAuth:", error);
       }
@@ -105,7 +102,6 @@ export const useAuthStore = create((set, get) => ({
         return;
       }
 
-      // Send the Firebase ID token to our backend
       const res = await axiosInstance.post("/auth/firebase-auth", {
         idToken: result.idToken,
       });

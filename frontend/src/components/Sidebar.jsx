@@ -21,7 +21,6 @@ const Sidebar = () => {
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
   useEffect(() => {
-    // Only load users once when component mounts
     if (!hasInitialLoad && users.length === 0) {
       getUsers();
       setHasInitialLoad(true);
@@ -36,7 +35,6 @@ const Sidebar = () => {
     };
   }, [subscribeToGlobalEvents, unsubscribeFromGlobalEvents]);
 
-  // Memoize filtered users to prevent unnecessary recalculations
   const filteredUsers = useMemo(() => {
     return showOnlineOnly
       ? users.filter((user) => onlineUsers.includes(user._id))
@@ -61,7 +59,6 @@ const Sidebar = () => {
           <span className="font-medium hidden lg:block">Contacts</span>
         </div>
 
-        {/* Mobile view */}
         <div className="mt-2 flex items-center justify-center gap-1 lg:hidden">
           <label className="cursor-pointer">
             <input
@@ -79,7 +76,6 @@ const Sidebar = () => {
           </div>
         </div>
 
-        {/* Desktop view */}
         <div className="mt-3 hidden lg:flex items-center gap-2">
           <label className="cursor-pointer flex items-center gap-2">
             <input

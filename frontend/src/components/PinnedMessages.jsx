@@ -56,7 +56,6 @@ const PinnedMessages = ({ selectedUser }) => {
     );
     if (messageElement) {
       messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
-      // Add highlight effect
       messageElement.classList.add("bg-yellow-100", "dark:bg-yellow-900/30");
       setTimeout(() => {
         messageElement.classList.remove(
@@ -72,7 +71,6 @@ const PinnedMessages = ({ selectedUser }) => {
       ref={pinnedMessagesRef}
       className="bg-base-200 border-b border-base-300"
     >
-      {/* Header */}
       <div
         className="flex items-center justify-between p-3 cursor-pointer hover:bg-base-300 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -91,7 +89,6 @@ const PinnedMessages = ({ selectedUser }) => {
         )}
       </div>
 
-      {/* Pinned Messages List */}
       {isExpanded && (
         <div className="max-h-60 overflow-y-auto">
           {isPinnedMessagesLoading ? (
@@ -108,7 +105,6 @@ const PinnedMessages = ({ selectedUser }) => {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      {/* Sender info */}
                       <div className="flex items-center gap-2 mb-1">
                         <div className="w-6 h-6 rounded-full border overflow-hidden flex-shrink-0">
                           <img
@@ -131,7 +127,6 @@ const PinnedMessages = ({ selectedUser }) => {
                         </span>
                       </div>
 
-                      {/* Message content */}
                       <div className="space-y-1">
                         {message.image && (
                           <img
@@ -155,7 +150,6 @@ const PinnedMessages = ({ selectedUser }) => {
                       </div>
                     </div>
 
-                    {/* Unpin button */}
                     <button
                       onClick={(e) => handleUnpin(message._id, e)}
                       className="opacity-0 group-hover:opacity-100 p-1 hover:bg-base-300 rounded transition-all"

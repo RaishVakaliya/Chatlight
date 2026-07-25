@@ -78,14 +78,11 @@ const SignUpPage = () => {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      {/* left side */}
       <div className="flex flex-col justify-center items-center pt-16 px-6 sm:px-16 sm:pt-16 sm:pb-2">
         <div className="w-full max-w-md space-y-8">
-          {/* LOGO */}
           <div className="text-center mb-8">
             <div className="flex flex-col items-center gap-2 group">
               <div className="size-12 rounded-xl flex items-center justify-center transition-colors">
-                {/* <MessageSquare className="size-6 text-primary" /> */}
                 <img src={logo} alt="Chatlight Logo" />
               </div>
               <h1 className="text-2xl font-bold mt-0">Create Account</h1>
@@ -188,14 +185,12 @@ const SignUpPage = () => {
             </button>
           </form>
 
-          {/* OR Divider */}
           <div className="flex items-center gap-4">
             <div className="flex-1 h-px bg-base-300"></div>
             <span className="text-base-content/60 text-sm">OR</span>
             <div className="flex-1 h-px bg-base-300"></div>
           </div>
 
-          {/* Google Sign-In Button */}
           <GoogleSignInButton
             onClick={loginWithGoogle}
             isLoading={isGoogleLoading}
@@ -213,7 +208,6 @@ const SignUpPage = () => {
         </div>
       </div>
 
-      {/* right side */}
       <div className="pt-14">
         <AuthImagePattern
           title="Join our community"
@@ -221,7 +215,6 @@ const SignUpPage = () => {
         />
       </div>
 
-      {/* Email Verification Modal */}
       {showVerification && (
         <EmailVerification
           email={formData.email}

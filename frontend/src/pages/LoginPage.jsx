@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import AuthImagePattern from "../components/AuthImagePattern";
 import { Link } from "react-router-dom";
-import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import logo from "../../src/assets/app_logo.png";
 import GoogleSignInButton from "../components/GoogleSignInButton";
 
@@ -22,14 +22,11 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Left Side - Form */}
       <div className="flex flex-col justify-center items-center pt-16 px-6 sm:pt-4 sm:px-16 sm:pb-0">
         <div className="w-full max-w-md space-y-8">
-          {/* Logo */}
           <div className="text-center mb-0">
             <div className="flex flex-col items-center gap-2 group">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center transition-colors">
-                {/* <MessageSquare className="w-6 h-6 text-primary" /> */}
                 <img src={logo} alt="Chatlight Logo" />
               </div>
               <h1 className="text-2xl font-bold mt-0">Welcome Back</h1>
@@ -37,7 +34,6 @@ const LoginPage = () => {
             </div>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="form-control">
               <label className="label">
@@ -106,14 +102,12 @@ const LoginPage = () => {
             </button>
           </form>
 
-          {/* OR Divider */}
           <div className="flex items-center gap-4">
             <div className="flex-1 h-px bg-base-300"></div>
             <span className="text-base-content/60 text-sm">OR</span>
             <div className="flex-1 h-px bg-base-300"></div>
           </div>
 
-          {/* Google Sign-In Button */}
           <GoogleSignInButton
             onClick={loginWithGoogle}
             isLoading={isGoogleLoading}
@@ -131,7 +125,6 @@ const LoginPage = () => {
         </div>
       </div>
 
-      {/* Right Side - Image/Pattern */}
       <div className="pt-14">
         <AuthImagePattern
           title={"Welcome back!"}

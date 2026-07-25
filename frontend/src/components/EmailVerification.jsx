@@ -10,14 +10,12 @@ const EmailVerification = ({ email, onClose, onVerificationSuccess }) => {
   const inputRefs = useRef([]);
   const { verifyEmail, resendVerificationCode, isVerifying } = useAuthStore();
 
-  // Focus first input on mount
   useEffect(() => {
     if (inputRefs.current[0]) {
       inputRefs.current[0].focus();
     }
   }, []);
 
-  // Countdown timer for resend button
   useEffect(() => {
     let timer;
     if (countdown > 0) {
@@ -27,25 +25,21 @@ const EmailVerification = ({ email, onClose, onVerificationSuccess }) => {
   }, [countdown]);
 
   const handleInputChange = (index, value) => {
-    // Only allow digits
     if (!/^\d*$/.test(value)) return;
 
     const newCode = [...code];
     newCode[index] = value;
     setCode(newCode);
 
-    // Auto-focus next input
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyDown = (index, e) => {
-    // Handle backspace
     if (e.key === "Backspace" && !code[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
-    // Handle paste
     if (e.key === "v" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       navigator.clipboard.readText().then((text) => {
@@ -75,7 +69,6 @@ const EmailVerification = ({ email, onClose, onVerificationSuccess }) => {
       onVerificationSuccess();
     } catch (error) {
       toast.error(error.message || "Verification failed");
-      // Clear the code on error
       setCode(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
     }
@@ -83,7 +76,7 @@ const EmailVerification = ({ email, onClose, onVerificationSuccess }) => {
 
   const handleResendCode = async () => {
     if (countdown > 0) return;
-    
+
     setIsResending(true);
     try {
       await resendVerificationCode(email);
@@ -98,12 +91,11 @@ const EmailVerification = ({ email, onClose, onVerificationSuccess }) => {
     }
   };
 
-  const isCodeComplete = code.every(digit => digit !== "");
+  const isCodeComplete = code.every((digit) => digit !== "");
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-base-100 rounded-2xl p-8 w-full max-w-md relative shadow-2xl">
-        {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-base-content/60 hover:text-base-content transition-colors"
@@ -111,38 +103,38 @@ const EmailVerification = ({ email, onClose, onVerificationSuccess }) => {
           <X className="h-6 w-6" />
         </button>
 
-        {/* Email Icon */}
         <div className="flex justify-center mb-6">
           <div className="relative">
             <div className="w-20 h-16 bg-gradient-to-br from-orange-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
               <Mail className="h-8 w-8 text-white" />
             </div>
-            {/* Location pin decoration */}
             <div className="absolute -top-2 -left-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
               <div className="w-2 h-2 bg-white rounded-full"></div>
             </div>
-            {/* Password dots decoration */}
             <div className="absolute -bottom-1 right-2 bg-white rounded px-2 py-1 shadow-md">
               <div className="flex gap-1">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                  <div
+                    key={i}
+                    className="w-1 h-1 bg-gray-400 rounded-full"
+                  ></div>
                 ))}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Title */}
         <h2 className="text-2xl font-bold text-center text-base-content mb-2">
           Verify Your Email Address
         </h2>
 
-        {/* Description */}
         <p className="text-center text-base-content/70 mb-8 text-sm leading-relaxed">
-          We've sent a 6-digit verification code to your email address. Please enter the code below to verify your account and complete your registration. The code will expire in 10 minutes for security purposes.
+          We've sent a 6-digit verification code to your email address. Please
+          enter the code below to verify your account and complete your
+          registration. The code will expire in 10 minutes for security
+          purposes.
         </p>
 
-        {/* Code Input */}
         <div className="flex gap-3 justify-center mb-6">
           {code.map((digit, index) => (
             <input
@@ -162,7 +154,6 @@ const EmailVerification = ({ email, onClose, onVerificationSuccess }) => {
           ))}
         </div>
 
-        {/* Change Email */}
         <div className="text-center mb-6">
           <p className="text-sm text-base-content/70">
             Want to Change Your Email Address?{" "}
@@ -175,7 +166,6 @@ const EmailVerification = ({ email, onClose, onVerificationSuccess }) => {
           </p>
         </div>
 
-        {/* Verify Button */}
         <button
           onClick={handleVerify}
           disabled={!isCodeComplete || isVerifying}
@@ -188,7 +178,6 @@ const EmailVerification = ({ email, onClose, onVerificationSuccess }) => {
           {isVerifying ? "Verifying..." : "Verify Email"}
         </button>
 
-        {/* Resend Code */}
         <div className="text-center mt-4">
           <button
             onClick={handleResendCode}
@@ -198,8 +187,8 @@ const EmailVerification = ({ email, onClose, onVerificationSuccess }) => {
             {isResending
               ? "Sending..."
               : countdown > 0
-              ? `Resend Code (${countdown}s)`
-              : "Resend Code"}
+                ? `Resend Code (${countdown}s)`
+                : "Resend Code"}
           </button>
         </div>
       </div>
