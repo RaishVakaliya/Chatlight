@@ -45,7 +45,10 @@ const Footer = memo(() => {
 
         <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
           <span className="whitespace-nowrap">© {currentYear}</span>
-          <span className="whitespace-nowrap hidden sm:inline">Chatlight</span>
+          <span className="whitespace-nowrap hidden sm:inline">
+            <span className="text-[#6366F1]">Chat</span>
+            <span className="text-[#EC4899]">light</span>
+          </span>
           <Heart className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-red-500 fill-red-500 flex-shrink-0" />
         </div>
       </div>

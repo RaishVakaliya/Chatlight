@@ -100,7 +100,10 @@ const Navbar = () => {
               <div className="size-16 rounded-lg flex items-center justify-center">
                 <img src={logo} alt="Chatlight Logo" />
               </div>
-              <h1 className="text-lg font-bold">Chatlight</h1>
+              <h1 className="text-lg font-bold">
+                <span className="text-[#6366F1]">Chat</span>
+                <span className="text-[#EC4899]">light</span>
+              </h1>
             </Link>
           </div>
 
