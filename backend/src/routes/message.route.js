@@ -2,17 +2,23 @@ import express from "express";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import {
   getMessages,
-  getUsersForSidebar,
   sendMessage,
-  searchUsers,
-  getUnreadMessagesCount,
   markMessagesAsRead,
+} from "../controllers/message.controller.js";
+import {
+  editMessage,
+  deleteMessage,
+} from "../controllers/messageAction.controller.js";
+import {
+  getUsersForSidebar,
+  getUnreadMessagesCount,
+} from "../controllers/sidebar.controller.js";
+import {
   pinMessage,
   unpinMessage,
   getPinnedMessages,
-  editMessage,
-  deleteMessage,
-} from "../controllers/message.controller.js";
+} from "../controllers/pin.controller.js";
+import { searchUsers } from "../controllers/search.controller.js";
 
 const router = express.Router();
 

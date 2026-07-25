@@ -7,10 +7,12 @@ import {
   updateProfile,
   deleteAccount,
   firebaseAuth,
+} from "../controllers/auth.controller.js";
+import {
   sendVerificationCode,
   verifyEmail,
   resendVerificationCode,
-} from "../controllers/auth.controller.js";
+} from "../controllers/verification.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
